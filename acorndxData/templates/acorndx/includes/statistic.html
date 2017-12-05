@@ -1,0 +1,23 @@
+{% extends 'acorndx/base.html' %}
+{% block content %}
+{#    添加返回按钮#}
+    <form action="{% url 'depart' depart=table %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" name="comeback" class="btn btn-primary" value="comeback">返回</button>
+    </form>
+    <div class="row">
+{#        作图展示面板#}
+        <div class="col-sm-3 col-md-2">
+                {% block select %}
+{#                    继承并重写统计变量#}
+                {% endblock %}
+        </div>
+        <div class="col-sm-9 col-md-10">
+            <div class="panel-body">
+                {% block plot %}
+{#                    继承并重写统计结果图片#}
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

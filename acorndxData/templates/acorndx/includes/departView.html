@@ -1,0 +1,10 @@
+{% extends 'acorndx/base.html' %}
+{% block content %}
+    <form action="{% url 'printData' table=Departs %}" method="POST">
+        {% csrf_token %}
+        <div class="btn-group" role="group" aria-label="">
+            <button type="submit" name="detail" class="btn btn-primary" value="detail">详细数据</button>
+            <button type="submit" name="statistic" class="btn btn-primary" value="statistic">统计结果</button>
+        </div>
+    </form>
+{% endblock %}

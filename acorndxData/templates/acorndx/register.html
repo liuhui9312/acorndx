@@ -1,0 +1,21 @@
+{% extends 'acorndx/base.html' %}
+{% block head %}
+    <link href="../../static/css/signin.css" rel="stylesheet">
+{% endblock %}
+{% block content %}
+    <div class="container">
+        <form class="form-signin" action="{% url 'register' %}" method="post" accept-charset="utf-8" enctype="multipart/form-data">
+            {% csrf_token %}
+            <label for="username" class="sr-only">用户名</label>
+            <input type="text" name="username" id="'username"class="form-control" placeholder="请输入用户名">
+            <label for="password" class="sr-only">密码</label>
+            <input type="password" name="password" id="password" class="form-control" placeholder="请输入6-12位密码">
+            <label for="password" class="sr-only">再输一遍</label>
+            <input type="password" name="password2" id="password2" class="form-control" placeholder="请再次确认密码">
+            <input type="email" name="email" id="email" class="form-control" placeholder="请输入邮箱">
+{#            <input type="submit" class="submit" value="立即注册">#}
+            <button class="btn btn-lg btn-primary btn-block" type="submit">注册</button>
+        </form>
+    </div>
+{% endblock %}
+
