@@ -1,4 +1,12 @@
 {% extends 'acorndx/base.html' %}
+{% block head %}
+    <link href="../../../static/css/fileinput.css" media="all" rel="stylesheet" type="text/css"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" media="all" rel="stylesheet" type="text/css"/>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="../../../static/js/zh.js" type="text/javascript"></script>
+    <script src="../../../static/js/fileinput.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" type="text/javascript"></script>
+{% endblock %}
 {% block content %}
     <form action="{% url 'printData' table=Departs %}" method="POST">
         {% csrf_token %}
@@ -7,4 +15,16 @@
             <button type="submit" name="statistic" class="btn btn-primary" value="statistic">统计结果</button>
         </div>
     </form>
+    <div class="kv-file-content">
+        <form enctype="multipart/form-data" action="{% url 'upload' table=Departs %}" method="post">
+            {% csrf_token %}
+            <br>
+            <div>
+                <input class="file" type="file" multiple data-count="1" data-allowed-extensions="['csv', 'xlsx', 'xls']" name="file_name">
+            </div>
+            <br><button type="submit" class="btn btn-primary" name="submit" value="submit">上传数据</button>
+                <button type="reset" class="btn btn-default" name="reset" value="reset">重置</button>
+        </form>
+    </div>
+    <!--导入数据操作层-->
 {% endblock %}

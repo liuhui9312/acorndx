@@ -1,4 +1,12 @@
 {% extends 'acorndx/base.html' %}
+{% block head %}
+    <link rel="stylesheet" href="../../../static/css/bootstrap-table.css">
+    <link rel="stylesheet" href="../../../static/css/examples.css">
+    <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/bootstrap-table/1.11.1/bootstrap-table.min.css">
+    <script src="../../../static/js/bootstrap-table.js"></script>
+    <script src="../../../static/js/ga.js"></script>
+
+{% endblock %}
 {% block content %}
 {#    添加返回按钮#}
     <form action="{% url 'depart' depart=table %}" method="POST">
@@ -32,4 +40,24 @@
             </table>
         </div>
     </div>
+    <table id="table"
+           data-toggle="table" data-height="460"
+           data-url="{% url 'getData' depart=table %}"
+           data-method="get"
+           data-pagination="true"
+           data-page-size="5"
+           data-page-list="[10,20,30]"
+           data-pagination-first-text="First"
+           data-pagination-pre-text="Previous"
+           data-pagination-next-text="Next"
+           data-pagination-last-text="Last">
+        <thead>
+        <tr>
+            <th data-field="id">ID</th>
+            <th data-field="name">Item Name</th>
+            <th data-field="price">Item Price</th>
+        </tr>
+        </thead>
+    </table>
+
 {% endblock %}

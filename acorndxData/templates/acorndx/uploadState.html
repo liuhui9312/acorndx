@@ -1,0 +1,13 @@
+{% extends 'acorndx/base.html' %}
+{% block content %}
+    <form action="{% url 'depart' depart=table %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" name="comeback" class="btn btn-primary" value="comeback">返回</button>
+    </form>
+    {% if state %}
+        <h2>数据上传成功</h2>
+{#        {{ data }}#}
+    {% else %}
+        <h2>数据上传失败，请再试一遍！</h2>
+    {% endif %}
+{% endblock %}

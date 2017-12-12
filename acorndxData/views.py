@@ -1,3 +1,4 @@
+import os,json, time
 from django.contrib import auth
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -6,7 +7,7 @@ from django.shortcuts import render, redirect, HttpResponse
 from acorndx.form import UserForm
 from django.views.decorators.csrf import csrf_exempt
 from acorndxData.dataSql import *
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 # Create your views here.
 # 第四个是 auth中用户权限有关的类。auth可以设置每个用户的权限。
 
@@ -143,3 +144,57 @@ def statistic_view(request, depart):
             print(e)
         return render(request, 'acorndx/includes/plotData.html', context)
 
+
+def load_data(request, table):
+    context = {}
+    if request.method == 'POST':
+        # print(table)
+        context['table'] = table
+        table_dir = './acorndxData/upload/{0}'.format(table)
+        # print(request.POST)
+        my_data = request.FILES.get('file_name', None)
+        if my_data:
+            file_name = my_data.__dict__['_name']
+            # print(my_data.read())
+            if not os.path.exists(table_dir):
+                os.makedirs(table_dir)
+            fo = open('{0}/{1}_{2}'.format(table_dir, len(os.listdir(table_dir)), file_name), 'wb')
+            fo.write(my_data.read())
+            fo.close()
+            # print(request.FILES.getlist('file_name'))
+            context['state'] = 1
+            # context['data'] = data
+            return render(request, 'acorndx/uploadState.html', context)
+        else:
+            context['Departs'] = table
+            return render(request, 'acorndx/includes/departView.html', context)
+
+
+def get_data(request, depart):
+    context = {}
+    if request.method == "GET":
+        # print(request.GET)
+        this_table = table_dict[depart]
+        limit = request.GET.get('limit')  # how many items per page
+        offset = request.GET.get('offset')  # how many items in total in the DB
+        search = request.GET.get('search')
+        sort_column = request.GET.get('sort')  # which column need to sort
+        order = request.GET.get('order')  # ascending or descending
+        all_records = []
+        if search:
+            if sort_column in table_trans[this_table].keys():
+                if order == 'desc':
+                    sort_column = '-{}'.format(sort_column)
+                all_records = this_table.objects.all().order_by(sort_column)
+            all_records_count = all_records.count()
+            if not offset:
+                offset = 0
+            if not limit:
+                limit = 20
+            my_page = Paginator(all_records, limit)
+            page = int(int(offset) / int(limit)+1)
+            context = {'total': all_records_count, 'rows': []}
+            for tp in my_page.page(page):
+                context['rows'].append()
+        # 需要json处理下数据格式
+        return HttpResponse(json.dumps(context))
