@@ -6,6 +6,7 @@
 # @File    : dataSql.py
 # @Software: PyCharm
 import pandas as pd
+import datetime
 # from django.contrib import auth
 # from django.contrib.auth.models import User
 # from django.contrib.auth import authenticate
@@ -79,7 +80,8 @@ def get_all_data(project):
                         context['heads_ch'] = [table_trans[table_name][val] for val in context['heads']]
                     except Exception as e:
                         print(e)
-                context['datas'].append([tp_data[val] for val in context['heads']])
+                context['datas'].append([tp_data[val] if not isinstance(tp_data[val], datetime.date) else str(tp_data[val])
+                                         for val in context['heads']])
         return context
 
 
