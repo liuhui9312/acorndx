@@ -1,0 +1,13 @@
+{% extends 'acorndx/includes/analyst.html' %}
+{% block content %}
+    <form action="{% url 'depart' depart=Departs %}" method="POST">
+        {% csrf_token %}
+        <button type="submit" name="comeback" class="btn btn-primary" value="comeback">返回</button>
+    </form>
+    <h2>上传信息如下</h2>
+    <h3>主题：{{ title }}</h3>
+    <h3>描述：{{ describe }}</h3>
+    <h3>邮箱：{{ email }}</h3>
+    <h3>上传的文件名：{{ file_name }}</h3>
+    <h3>执行状态：{{ executing_state }}</h3>
+{% endblock %}

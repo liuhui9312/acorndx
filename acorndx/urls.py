@@ -28,4 +28,5 @@ urlpatterns = [
     url(r'^statistic/(?P<depart>\w+)', views.statistic_view, name='statistic'),
     url(r'^upload/(?P<table>\w+)', views.load_data, name='upload'),
     url(r'^getData/(?P<depart>\w+)', views.get_data, name='getData'),
+    url(r'^analyst/(?P<depart>\w+)', views.analyst_view, name='analyst'),
 ]

@@ -117,12 +117,17 @@ def depart_view(request, depart):
     context = {}
     if request.method == 'GET':
         context['Departs'] = depart
-        return render(request, 'acorndx/includes/departView.html', context)
+        if depart == 'analyst':
+            return render(request, 'acorndx/includes/analyst.html', context)
+        else:
+            return render(request, 'acorndx/includes/departView.html', context)
 
     if request.method == 'POST':
         context['Departs'] = depart
-        if 'comeback' in request.POST:
+        if 'comeback' in request.POST and depart != 'analyst':
             return render(request, 'acorndx/includes/departView.html', context)
+        elif 'comeback' in request.POST and depart == 'analyst':
+            return render(request, 'acorndx/includes/analyst.html', context)
 
 
 def statistic_view(request, depart):
@@ -148,22 +153,33 @@ def statistic_view(request, depart):
 def load_data(request, table):
     context = {}
     if request.method == 'POST':
-        # print(table)
         context['table'] = table
+        context['create_num'] = 0
+        context['repeat'] = 0
+        context['total_num'] = 0
+        context['error_num'] = 0
+        context['error_log'] = []
+        context['file_error'] = False
         table_dir = './acorndxData/upload/{0}'.format(table)
-        # print(request.POST)
         my_data = request.FILES.get('file_name', None)
         if my_data:
+            # 如果上传的数据不为空，将数据存到服务器中
             file_name = my_data.__dict__['_name']
-            # print(my_data.read())
             if not os.path.exists(table_dir):
                 os.makedirs(table_dir)
-            fo = open('{0}/{1}_{2}'.format(table_dir, len(os.listdir(table_dir)), file_name), 'wb')
+            file_path = '{0}/{1}_{2}'.format(table_dir, len(os.listdir(table_dir)), file_name)
+            fo = open(file_path, 'wb')
             fo.write(my_data.read())
             fo.close()
-            # print(request.FILES.getlist('file_name'))
-            context['state'] = 1
-            # context['data'] = data
+            # 开始进行数据库更新
+            context = upload_data(file_path=file_path,
+                                  project=table,
+                                  context=context)
+            context['update_num'] = context['total_num']-context['repeat']-context['error_num']-context['create_num']
+            if context['error_num'] == 0:
+                context['state'] = 1
+            else:
+                context['state'] = 0
             return render(request, 'acorndx/uploadState.html', context)
         else:
             context['Departs'] = table
@@ -173,7 +189,6 @@ def load_data(request, table):
 def get_data(request, depart):
     context = {}
     if request.method == "GET":
-        # print(request.GET)
         this_table = table_dict[depart]
         limit = request.GET.get('limit')  # how many items per page
         offset = request.GET.get('offset')  # how many items in total in the DB
@@ -198,3 +213,22 @@ def get_data(request, depart):
                 context['rows'].append()
         # 需要json处理下数据格式
         return HttpResponse(json.dumps(context))
+
+
+def analyst_view(request, depart):
+    context = {}
+    if request.method == 'POST':
+        print(request.POST)
+        context['title'] = request.POST.get('title')
+        context['describe'] = request.POST.get('describe')
+        context['email'] = request.POST.get('email')
+        context['Departs'] = depart
+        context['file_data'] = request.FILES.get('file_name', None)
+        if context['file_data']:
+            # 将上传得到的数据存储到服务器中，由后台进行操作处理
+            context['file_name'] = context['file_data'].__dict__['_name']
+            print(context['file_name'])
+            # print(context['file_data'].read())
+        context['executing_state'] = 'running'
+        # 添加执行方法 run(context)
+        return render(request, 'acorndx/includes/analystResult.html', context)

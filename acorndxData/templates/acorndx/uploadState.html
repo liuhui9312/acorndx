@@ -4,10 +4,24 @@
         {% csrf_token %}
         <button type="submit" name="comeback" class="btn btn-primary" value="comeback">返回</button>
     </form>
-    {% if state %}
-        <h2>数据上传成功</h2>
-{#        {{ data }}#}
+    {% if not file_error %}
+        {% if state %}
+            <h3>数据上传成功，共计{{ total_num }}条</h3>
+            <h3>新增的记录{{ create_num }}条</h3>
+            <h3>变更的记录{{ update_num }}条</h3>
+            <h3>重复的记录{{ repeat }}条</h3>
+            <h3>有{{ error_num }}条数据出错</h3>
+        {% else %}
+            <h3>数据上传错误，共计{{ total_num }}</h3>
+            <h3>新增记录{{ create_num }}条</h3>
+            <h3>更新记录{{ update_num }}条</h3>
+            <h3>重复的记录{{ repeat }}条</h3>
+            <h3>有{{ error_num }}条数据出错</h3>
+            {% for error in error_log %}
+                <h3>{{ error }}</h3>
+            {% endfor %}
+        {% endif %}
     {% else %}
-        <h2>数据上传失败，请再试一遍！</h2>
+        <h3>上传的文件错误！请选择正确的文件！</h3>
     {% endif %}
 {% endblock %}

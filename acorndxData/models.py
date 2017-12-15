@@ -18,7 +18,7 @@ class PersonInfo(models.Model):
     contact_address = models.CharField(max_length=100, null=True, blank=True)
     submit_physician = models.CharField(max_length=20, null=True, blank=True)
     physician_phone = models.CharField(max_length=18, null=True, blank=True)
-    medical_record_id = models.IntegerField()
+    medical_record_id = models.IntegerField(default=0)
 
     def __str__(self):
         return self.sample_id
@@ -27,6 +27,7 @@ class PersonInfo(models.Model):
 class ItemsInfo(models.Model):
     # 项目信息表
     # 根据个人信息表自动更新counts
+    product_id = models.IntegerField(null=True, blank=True)
     project_type = models.CharField(max_length=10, default='实体瘤/血液病')
     detect_content = models.CharField(max_length=10, default='检测内容')
     detect_items = models.CharField(max_length=10, default='所属检测套餐')
@@ -38,49 +39,51 @@ class ItemsInfo(models.Model):
 
 class DetectInfo(models.Model):
     # 检测信息
-    sample = models.ForeignKey(PersonInfo, on_delete=models.CASCADE, related_name='+')
-    receipt_date = models.DateField()
-    detect_content = models.ForeignKey(ItemsInfo, on_delete=models.CASCADE)
-    inspect_date = models.DateField()
-    deadline = models.DateField()
-    report_date = models.DateField()
-    send_date = models.DateField()
-    is_scientific = models.CharField(max_length=2, choices=YES_OR_NO, default='否')
+    sample_id = models.CharField(max_length=20, default='HB00001')
+    receipt_date = models.DateField(null=True, blank=True)
+    detect_content = models.CharField(max_length=20, null=True, blank=True)
+    inspect_date = models.DateField(null=True, blank=True)
+    deadline = models.DateField(null=True, blank=True)
+    report_date = models.DateField(null=True, blank=True)
+    send_date = models.DateField(null=True, blank=True)
+    is_scientific = models.CharField(max_length=2, choices=YES_OR_NO)
 
     def __int__(self):
-        return self.sample
+        return self.sample_id
 
 
 class FinancialRecord(models.Model):
     # 财务信息
-    sample = models.ForeignKey(PersonInfo,
-                               on_delete=models.CASCADE, related_name='+')
-    serial_number = models.CharField(max_length=20, default='输入流水号')
-    sale_price = models.FloatField(default=0)
+    sample_id = models.CharField(max_length=20, default='HB00001')
+    serial_number = models.CharField(max_length=20, null=True, blank=True)
+    sale_price = models.CharField(max_length=10, null=True, blank=True)
     is_charge = models.CharField(max_length=5, choices=YES_OR_NO)
     invoice_id = models.CharField(max_length=30, blank=True, null=True)
     invoice_company = models.CharField(max_length=30, blank=True, null=True)
-    invoice_date = models.DateField()
-    invoice_amount = models.FloatField(default=0)
+    invoice_date = models.DateField(null=True, blank=True)
+    invoice_amount = models.CharField(max_length=10, null=True, blank=True)
     receipt_id = models.CharField(max_length=30, blank=True, null=True)
-    # receivable_way = models.CharField(max_length=10, default='输入回款方式')
-    bank_charges = models.FloatField(blank=True, null=True)
-    trade_receivable = models.FloatField(default=0)
-    actual_payment = models.FloatField(default=0)
-    settlement_price = models.FloatField(default=0)
-    cash_date = models.DateField()
-    cash_month = models.DateField()
+    receivable_way = models.CharField(max_length=10, default='输入回款方式')
+    bank_charges = models.CharField(max_length=10, blank=True, null=True)
+    trade_receivable = models.CharField(max_length=10, null=True, blank=True)
+    actual_payment = models.CharField(max_length=10, null=True, blank=True)
+    settlement_price = models.CharField(max_length=10, null=True, blank=True)
+    cash_date = models.DateField(null=True, blank=True)
+    cash_month = models.CharField(max_length=10, null=True, blank=True)
     SP = models.CharField(max_length=10, null=True, blank=True)
-    voucher_id = models.CharField(max_length=20, default='输入用友凭证号')
-    promotion_expenses = models.FloatField(default=0)
-    promotion_date = models.DateField()
-    u8_month = models.DateField()
+    voucher_id = models.CharField(max_length=20, null=True, blank=True)
+    promotion_expenses = models.CharField(max_length=10, null=True, blank=True)
+    promotion_date = models.DateField(null=True, blank=True)
+    u8_month = models.DateField(null=True, blank=True)
     is_receipt = models.CharField(max_length=5, choices=YES_OR_NO)
+
+    def __str__(self):
+        return self.sample_id
 
 
 class SaleInfo(models.Model):
     # 销售信息
-    sample = models.ForeignKey(PersonInfo, on_delete=models.CASCADE)
+    sample_id = models.CharField(max_length=20, default='HB00001')
     cities = models.CharField(max_length=10, default='输入城市')
     areas = models.CharField(max_length=10, default='输入地区')
     market_represent = models.CharField(max_length=10, default='输入销售代表')
@@ -89,13 +92,16 @@ class SaleInfo(models.Model):
     station = models.CharField(max_length=10, default='输入岗位')
     in_charge = models.CharField(max_length=10, default='输入负责人')
     DSM = models.CharField(max_length=10, default='输入直属领导')
-    sale_price = models.FloatField(default=0)
+    sale_price = models.CharField(max_length=10, null=True, blank=True)
     agency_direct = models.CharField(max_length=5, default='直营')
+
+    def __str__(self):
+        return self.sample_id
 
 
 class BloodClinicInfo(models.Model):
     # 血液病临床信息表
-    sample = models.ForeignKey(PersonInfo, on_delete=models.CASCADE)
+    sample_id = models.CharField(max_length=20, default='HB00001')
     takeTime = models.DateField(null=True, blank=True)
     detectTime = models.DateField(null=True, blank=True)
     importantFeature = models.CharField(max_length=30, null=True, blank=True)
@@ -116,10 +122,13 @@ class BloodClinicInfo(models.Model):
     marrowResult = models.CharField(max_length=30, null=True, blank=True)
     clinicalDiagnosis = models.CharField(max_length=30, null=True, blank=True)
 
+    def __str__(self):
+        return self.sample_id
+
 
 class CancerClinicInfo(models.Model):
     # 实体瘤样本临床信息表
-    sample = models.ForeignKey(PersonInfo, on_delete=models.CASCADE)
+    sample_id = models.CharField(max_length=20, default='HB00001')
     sampleType = models.CharField(max_length=10, null=True, blank=True)
     sendTogether = models.CharField(max_length=10, null=True, blank=True)
     tissueType = models.CharField(max_length=10, null=True, blank=True)
@@ -196,10 +205,13 @@ class CancerClinicInfo(models.Model):
     contactHistory = models.CharField(max_length=10, null=True, blank=True)
     breastSelfCheck = models.CharField(max_length=10, null=True, blank=True)
 
+    def __str__(self):
+        return self.sample_id
+
 
 class CancerResult(models.Model):
     # 实体瘤检测结果
-    sample = models.ForeignKey(PersonInfo, on_delete=models.CASCADE)
+    sample_id = models.CharField(max_length=20, default='HB00001')
     batchId = models.CharField(max_length=20, null=True, blank=True)
     classify = models.CharField(max_length=20, null=True, blank=True)
     nutationType = models.CharField(max_length=20, null=True, blank=True)
@@ -210,10 +222,13 @@ class CancerResult(models.Model):
     annoLdRemark = models.CharField(max_length=50, null=True, blank=True)
     isFirstLevel = models.CharField(max_length=10, null=True, blank=True)
 
+    def __str__(self):
+        return self.sample_id
+
 
 class BloodResult(models.Model):
     # 血液病检测结果
-    sample = models.ForeignKey(PersonInfo, on_delete=models.CASCADE)
+    sample_id = models.CharField(max_length=20, default='HB00001')
     confirmDisease = models.CharField(max_length=20, null=True, blank=True)
     confirmTime = models.CharField(max_length=20, null=True, blank=True)
     remark = models.CharField(max_length=20, null=True, blank=True)
@@ -221,3 +236,6 @@ class BloodResult(models.Model):
     isNegative = models.CharField(max_length=10, null=True, blank=True)
     isMultiSite = models.CharField(max_length=10, null=True, blank=True)
     geneNumber = models.CharField(max_length=5, null=True, blank=True)
+
+    def __str__(self):
+        return self.sample_id

@@ -5,81 +5,61 @@
 # @Descript: 
 # @File    : dataSql.py
 # @Software: PyCharm
-from django.contrib import auth
-from django.contrib.auth.models import User
-from django.contrib.auth import authenticate
+import pandas as pd
+# from django.contrib import auth
+# from django.contrib.auth.models import User
+# from django.contrib.auth import authenticate
 from acorndxData.models import DetectInfo
 from acorndxData.models import FinancialRecord
 from acorndxData.models import ItemsInfo
 from acorndxData.models import PersonInfo
 from acorndxData.models import SaleInfo
-import json
+from acorndxData.configure import table_trans
+
 table_dict = {'detect_info': DetectInfo,
               'financial_record': FinancialRecord,
               'items_info': ItemsInfo,
               'person_info': PersonInfo,
               'sale_info': SaleInfo}
-table_trans = {'person_info': {'id': '系统ID',
-                               'sample_id': '样本编号',
-                               'sample_nation': '民族',
-                               'sample_age': '年龄',
-                               'certificate_type': '证件类型',
-                               'certificate_id': '身份证号',
-                               'sample_name': '患者姓名',
-                               'contact_phone': '联系电话',
-                               'contact_email': '电子邮箱',
-                               'contact_address': '通讯地址',
-                               'submit_physician': '送检医生',
-                               'physician_phone': '医师电话',
-                               'medical_record_id': '病历号'},
-               'detect_info': {'id': '系统ID',
-                               'sample_id': '样本编号',
-                               'receipt_date': '接收日期',
-                               'inspect_date': '送检日期',
-                               'deadline': '应出报告日期',
-                               'report_date': '出报告日期',
-                               'send_date': '报告寄送日期',
-                               'is_scientific': '是否是科研项目',
-                               'detect_content_id': '检测内容ID'},
-               'financial_record': {'id': '系统ID',
-                                    'sample_id': '样本编号',
-                                    'serial_number': '流水号',
-                                    'sale_price': '销售价格',
-                                    'is_charge': '是否收费',
-                                    'invoice_id': '发票号',
-                                    'invoice_company': '开票单位',
-                                    'invoice_date': '开票日期',
-                                    'invoice_amount': '开票金额',
-                                    'receipt_id': '收据号',
-                                    'receivable_way': '回款方式',
-                                    'bank_charges': '银行手续费',
-                                    'trade_receivable': '应收货款',
-                                    'actual_payment': '实际货款',
-                                    'settlement_price': '结算底价',
-                                    'cash_date': '回款日期',
-                                    'cash_month': '回款月',
-                                    'voucher_id': '用友凭证号',
-                                    'promotion_expenses': '推广费支付金额',
-                                    'promotion_date': '推广费支付日期',
-                                    'u8_month': 'U8确认收入月份',
-                                    'is_receipt': '确认收款'},
-               'items_info': {'id': '系统ID',
-                              'project_type': '项目分类',
-                              'detect_content': '检测内容',
-                              'detect_items': '检测项目'},
-               'sale_info': {'id': '系统ID',
-                             'sample_id': '样本编号',
-                             'citys': '城市',
-                             'areas': '地区',
-                             'market_represent': '销售代表',
-                             'submit_hosptial': '送检医院',
-                             'departments': '科室',
-                             'station': '岗位',
-                             'in_charge': '责任人',
-                             'DSM': 'DSM',
-                             'sale_price': '销售价格',
-                             'agency_direct': '代理商/直营'}
-               }
+
+
+def update_or_create(table_name, tp_dict, context):
+    # project 是数据表的基础类
+    project = table_dict[table_name]
+    p = project()
+    try:
+        if table_name == 'items_info':
+            if not project.objects.filter(product_id=tp_dict['product_id']):
+                context['create_num'] += 1
+            else:
+                p = project.objects.filter(product_id=tp_dict['product_id'])[0]
+        elif table_name != 'items_info':
+            if not project.objects.filter(sample_id=tp_dict['sample_id']):
+                # print('创建')
+                context['create_num'] += 1
+            else:
+                # print('更新')
+                p = project.objects.filter(sample_id=tp_dict['sample_id'])[0]
+        # print(project.__dict__)
+        repeat = 1
+        for title in tp_dict.keys():
+            # 判断读取的记录和数据库中的是否有差异
+            if p.__dict__[title] != tp_dict[title] and tp_dict[title] != 'nan':
+                setattr(p, title, tp_dict[title])
+            else:
+                repeat += 1
+        p.save()
+        if len(list(tp_dict.keys())) == repeat:
+            context['repeat'] += 1
+    except Exception as e:
+        context['error_num'] += 1
+        if 'sample_id' in tp_dict.keys():
+            context['error_log'].append('{}数据更新失败！'.format(tp_dict['sample_id']))
+        else:
+            context['error_log'].append('{}数据更新失败！'.format(tp_dict['product_id']))
+        print(str(e))
+    finally:
+        del p
 
 
 def get_all_data(project):
@@ -100,4 +80,57 @@ def get_all_data(project):
                     except Exception as e:
                         print(e)
                 context['datas'].append([tp_data[val] for val in context['heads']])
+        return context
+
+
+def reverse(table, value):
+    key = ''
+    for key in table_trans[table].keys():
+        if table_trans[table][key] == value:
+            break
+    if key != '':
+        return key
+    else:
+        return None
+
+
+def upload_data(file_path, project, context):
+    if project in table_dict.keys():
+        table_name = project
+        # project = table_dict[project]
+        try:
+            table_data = pd.read_excel(file_path)
+            # print(type(project))
+            my_data = []
+            total_num = 0
+            for i in list(table_data.index):
+                tp_dict = {}
+                total_num += 1
+                # 将表中的中文表头转换成对应的英文数据库表头，
+                # 如果不在转换的字典中，则该列数据不能存储到数据库中；
+                # 要去掉表格中表头的空格，否则匹配不上
+                for j in range(len(list(table_data.columns))):
+                    title = list(table_data.columns)[j].replace(' ', '')
+                    title = reverse(table_name, title)
+                    if title:
+                        if 'date' not in title:
+                            tp_dict[title] = str(table_data.ix[i, j])
+                        else:
+                            tp_dict[title] = str(table_data.ix[i, j]).split(' ')[0]
+                if len(tp_dict) < len(table_trans[table_name]) / 2:
+                    # 如果要更新的数据属性数量少于对应表的属性一半数量
+                    # 中断更新
+                    context['file_error'] = True
+                    return context
+                try:
+                    update_or_create(table_name=table_name,
+                                     tp_dict=tp_dict,
+                                     context=context)
+                except Exception as e:
+                    print(e)
+                my_data.append(tp_dict)
+            context['total_num'] = total_num
+        except Exception as e:
+            print(e)
+            context['file_error'] = True
         return context
