@@ -7,6 +7,8 @@ from django.shortcuts import render, redirect, HttpResponse
 from acorndx.form import UserForm
 from django.views.decorators.csrf import csrf_exempt
 from acorndxData.dataSql import *
+from pyecharts.constants import DEFAULT_HOST
+from acorndxData.dataPlot import *
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 # Create your views here.
 # 第四个是 auth中用户权限有关的类。auth可以设置每个用户的权限。
@@ -93,7 +95,6 @@ def index_view(req):
 
 def data_view(request, table):
     if request.method == 'POST':
-        # db_table = 'person_info'
         context = get_all_data(project=table)
         context['table'] = table
         # print(table)
@@ -102,8 +103,10 @@ def data_view(request, table):
         else:
             context['hasData'] = False
         if 'detail' in request.POST:
+            # print(context['heads_ch'])
             return render(request, 'acorndx/includes/printData.html', context)
         elif table == 'financial_record':
+            context['table_dict'] = table_trans[table]
             return render(request, 'acorndx/includes/financial.html', context)
         elif table == 'person_info':
             return render(request, 'acorndx/includes/person.html', context)
@@ -131,22 +134,37 @@ def depart_view(request, depart):
 
 
 def statistic_view(request, depart):
+    # 获取统计结果需要的的各项筛选条件
     context = {}
     if request.method == 'POST':
-        try:
-            print('statistic')
-            context['table'] = depart
-            context['op'] = request.POST.get('my_method')
-            context['area'] = request.POST.get('area')
-            context['city'] = request.POST.get('city')
-            context['date'] = request.POST.get('date')
-            context['count'] = request.POST.get('count')
-            context['product'] = request.POST.get('product')
-            context['hospital'] = request.POST.get('hospital')
-            context['team'] = request.POST.get('team')
-            context['represent'] = request.POST.get('represent')
-        except Exception as e:
-            print(e)
+        context['table'] = depart
+        context['x_label'] = request.POST.get('x_label')
+        context['y_label'] = request.POST.get('y_label')
+        context['group'] = request.POST.get('group')
+        context['pic_type'] = request.POST.get('pic_type')
+        context['table_dict'] = table_trans[depart]
+        context['summary'] = request.POST.get('summary')
+        context['dat'] = []
+        context['index'] = []
+        print(request.POST)
+        context['host'] = DEFAULT_HOST
+        context['script_list'] = []
+        if not context['summary']:
+            try:
+                # 先从数据库中获取用于统计作图的数据
+                context = get_plot_data(context)
+                # 根据作图的类型获取统计图对象
+                if context['pic_type'] == 'Bar':
+                    this_plot = PlotBar()
+                    context['echarts'] = this_plot.bar_plot(dat=context['dat'],
+                                                            ind=context['index'])
+                    context['script_list'] = this_plot.script_list
+            except Exception as e:
+                print(e)
+        # else:
+            # try:
+            #     # 先从数据库中获取用于统计作图的数据
+            #     context =
         return render(request, 'acorndx/includes/plotData.html', context)
 
 

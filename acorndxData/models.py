@@ -37,19 +37,19 @@ class ItemsInfo(models.Model):
         return self.detect_content
 
 
-class DetectInfo(models.Model):
-    # 检测信息
-    sample_id = models.CharField(max_length=20, default='HB00001')
-    receipt_date = models.DateField(null=True, blank=True)
-    detect_content = models.CharField(max_length=20, null=True, blank=True)
-    inspect_date = models.DateField(null=True, blank=True)
-    deadline = models.DateField(null=True, blank=True)
-    report_date = models.DateField(null=True, blank=True)
-    send_date = models.DateField(null=True, blank=True)
-    is_scientific = models.CharField(max_length=2, choices=YES_OR_NO)
-
-    def __int__(self):
-        return self.sample_id
+# class DetectInfo(models.Model):
+#     # 检测信息
+#     sample_id = models.CharField(max_length=20, default='HB00001')
+#     receipt_date = models.DateField(null=True, blank=True)
+#     detect_content = models.CharField(max_length=20, null=True, blank=True)
+#     inspect_date = models.DateField(null=True, blank=True)
+#     deadline = models.DateField(null=True, blank=True)
+#     report_date = models.DateField(null=True, blank=True)
+#     send_date = models.DateField(null=True, blank=True)
+#     is_scientific = models.CharField(max_length=2, choices=YES_OR_NO)
+#
+#     def __int__(self):
+#         return self.sample_id
 
 
 class FinancialRecord(models.Model):
@@ -92,8 +92,15 @@ class SaleInfo(models.Model):
     station = models.CharField(max_length=10, default='输入岗位')
     in_charge = models.CharField(max_length=10, default='输入负责人')
     DSM = models.CharField(max_length=10, default='输入直属领导')
-    sale_price = models.CharField(max_length=10, null=True, blank=True)
+    # sale_price = models.CharField(max_length=10, null=True, blank=True)
     agency_direct = models.CharField(max_length=5, default='直营')
+    receipt_date = models.DateField(null=True, blank=True)
+    detect_content = models.CharField(max_length=20, null=True, blank=True)
+    inspect_date = models.DateField(null=True, blank=True)
+    dead_date = models.DateField(null=True, blank=True)
+    report_date = models.DateField(null=True, blank=True)
+    send_date = models.DateField(null=True, blank=True)
+    is_scientific = models.CharField(max_length=2, choices=YES_OR_NO, default='NO')
 
     def __str__(self):
         return self.sample_id
