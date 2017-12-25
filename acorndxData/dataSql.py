@@ -10,15 +10,14 @@ import datetime
 # from django.contrib import auth
 # from django.contrib.auth.models import User
 # from django.contrib.auth import authenticate
-from acorndxData.models import DetectInfo
+# from acorndxData.models import DetectInfo
 from acorndxData.models import FinancialRecord
 from acorndxData.models import ItemsInfo
 from acorndxData.models import PersonInfo
 from acorndxData.models import SaleInfo
 from acorndxData.configure import table_trans
 
-table_dict = {'detect_info': DetectInfo,
-              'financial_record': FinancialRecord,
+table_dict = {'financial_record': FinancialRecord,
               'items_info': ItemsInfo,
               'person_info': PersonInfo,
               'sale_info': SaleInfo}
@@ -45,6 +44,7 @@ def update_or_create(table_name, tp_dict, context):
         repeat = 1
         for title in tp_dict.keys():
             # 判断读取的记录和数据库中的是否有差异
+            # setattr 设定类的属性值
             if p.__dict__[title] != tp_dict[title] and tp_dict[title] != 'nan':
                 setattr(p, title, tp_dict[title])
             else:
@@ -77,10 +77,14 @@ def get_all_data(project):
                 if 'heads' not in context.keys():
                     context['heads'] = [val for val in tp_data.keys() if not val.startswith('_') and val != 'id']
                     try:
-                        context['heads_ch'] = [table_trans[table_name][val] for val in context['heads']]
+                        context['heads_ch'] = [table_trans[table_name][val] for
+                                               val in context['heads']]
                     except Exception as e:
                         print(e)
-                context['datas'].append([tp_data[val] if not isinstance(tp_data[val], datetime.date) else str(tp_data[val])
+                context['datas'].append([tp_data[val]
+                                         if not isinstance(tp_data[val],
+                                                           datetime.date)
+                                         else str(tp_data[val])
                                          for val in context['heads']])
         return context
 
@@ -136,3 +140,44 @@ def upload_data(file_path, project, context):
             print(e)
             context['file_error'] = True
         return context
+
+
+def get_plot_data(context):
+    table = context['table']
+    # print(table)
+    if context['group'] == '--':
+        project = table_dict[table]
+        data = project.objects.all()
+        # 将数据库中的数据转化成DataFrame形式
+        pd_data = []
+        for dt in data:
+            pd_data.append(dt.__dict__)
+        pd_data = pd.DataFrame(pd_data)
+        index = list(set(pd_data[context['x_label']]))
+        value = []
+        for x in index:
+            tp = list(pd_data.ix[pd_data.ix[:, context['x_label']] == x, context['y_label']])
+            if tp[0].isdigit():
+                value.append(sum([int(val) for val in tp]))
+            else:
+                value.append([tp.count(val) for val in tp])
+        context['dat'] = {context['y_label']: value}
+        context['index'] = [str(val) for val in index]
+    return context
+
+
+def get_statistic_data(context):
+    data1 = FinancialRecord.objects.all()
+    data2 = PersonInfo.objects.all()
+    data3 = SaleInfo.objects.all()
+    # 将数据库中的数据转化成DataFrame形式
+    data1 = [val.__dict__ for val in data1]
+    data2 = [val.__dict__ for val in data2]
+    data3 = [val.__dict__ for val in data3]
+    data1 = pd.DataFrame(data1)
+    data2 = pd.DataFrame(data2)
+    data3 = pd.DataFrame(data3)
+    data = pd.merge(data1, data2, on=['sample_id'])
+    data = pd.merge(data, data3, on=['sample_id'])
+    # 各个城市销量排名，按月
+

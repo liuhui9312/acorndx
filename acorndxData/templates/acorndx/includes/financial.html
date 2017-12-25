@@ -2,43 +2,44 @@
 {% block select %}
     <form role="form" action="{% url 'statistic' depart=table%}" class="form-group" method="post">
         {% csrf_token %}
-        <div class="input-group">
-            <span class="input-group-addon" id="basic-addon1">统计维度</span>
-            <input type="text" name="my_method" class="form-control" placeholder="总量/增长/趋势" aria-describedby="basic-addon1">
+        <div class="input-group" title="x_label">
+            <span class="input-group-addon" id="basic-addon1">横坐标</span>
+            <select type="text" name="x_label" class="form-control" title="x_label">
+                <option>--</option>
+                {% for k,v in table_dict.items %}
+                    <option value={{ k }}>{{ v }}</option>
+                {% endfor %}
+            </select>
         </div>
-        <div class="input-group">
-            <span class="input-group-addon" id="basic-addon1">选择地区</span>
-            <input type="text" name="area" class="form-control" placeholder="地区" aria-describedby="basic-addon1">
+        <div class="input-group" title="y_label">
+            <span class="input-group-addon" id="basic-addon1">纵坐标</span>
+            <select type="text" name="y_label" class="form-control" title="y_label">
+                <option>--</option>
+                {% for k,v in table_dict.items %}
+                    <option value={{ k }}>{{ v }}</option>
+                {% endfor %}
+            </select>
         </div>
-        <div class="input-group">
-            <span class="input-group-addon" id="basic-addon1">选择城市</span>
-            <input type="text" name="city" class="form-control" placeholder="城市" aria-describedby="basic-addon1">
+        <div class="input-group" title="group">
+            <span class="input-group-addon" id="basic-addon1">分组</span>
+            <select type="text" name="group" class="form-control" title="group">
+                <option>--</option>
+                {% for k,v in table_dict.items %}
+                    <option value={{ k }}>{{ v }}</option>
+                {% endfor %}
+            </select>
         </div>
-        <div class="input-group">
-            <span class="input-group-addon" id="basic-addon1">起始日期</span>
-            <input type="text" name="date" class="form-control" placeholder="日期" aria-describedby="basic-addon1">
+        <div class="input-group" title="group">
+            <span class="input-group-addon" id="basic-addon1">作图类型</span>
+            <select type="text" name="pic_type" class="form-control" title="pic">
+                <option value="Bar">条形图</option>
+                <option>饼图</option>
+                <option>折线图</option>
+                <option>地区分布图</option>
+            </select>
         </div>
-        <div class="input-group">
-            <span class="input-group-addon" id="basic-addon1">统计值</span>
-            <input type="text" name="count" class="form-control" placeholder="个数/价格" aria-describedby="basic-addon1">
-        </div>
-        <div class="input-group">
-            <span class="input-group-addon" id="basic-addon1">产品范围</span>
-            <input type="text" name="product" class="form-control" placeholder="产品" aria-describedby="basic-addon1">
-        </div>
-        <div class="input-group">
-            <span class="input-group-addon" id="basic-addon1">选择医院</span>
-            <input type="text" name="hospital" class="form-control" placeholder="医院" aria-describedby="basic-addon1">
-        </div>
-        <div class="input-group">
-            <span class="input-group-addon" id="basic-addon1">团队/个人</span>
-            <input type="text" name="team" class="form-control" placeholder="销售团队/个人" aria-describedby="basic-addon1">
-        </div>
-        <div class="input-group">
-            <span class="input-group-addon" id="basic-addon1">直营/代理</span>
-            <input type="text" name="represent" class="form-control" placeholder="直营/代理" aria-describedby="basic-addon1">
-        </div>
-        <button type="submit" class="btn btn-primary btn-block">统计</button>
+        <button type="submit" class="btn btn-primary btn-block" name="summary" value="summary">数据概览</button>
+        <button type="submit" class="btn btn-primary btn-block" name="statistic" value="statistic">统计</button>
     </form>
 {% endblock %}
 {% block plot %}

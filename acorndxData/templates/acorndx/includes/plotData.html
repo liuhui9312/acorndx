@@ -1,8 +1,9 @@
 {% extends 'acorndx/includes/financial.html' %}
+{% block head %}
+    {% for file in script_list %}
+        <script src="{{ host }}/{{ file }}.js"></script>
+    {% endfor %}
+{% endblock %}
 {% block plot %}
-    <p>table: {{ table }}</p>
-    <p>统计维度: {{ op}}</p>
-    <p>选择地区：{{ area }}</p>
-    <p>选择城市：{{ city }}</p>
-    <p>起始日期：{{ date }}</p>
+    {{ echarts|safe}}
 {% endblock %}
