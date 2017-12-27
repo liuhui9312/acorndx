@@ -144,9 +144,8 @@ def statistic_view(request, depart):
         context['pic_type'] = request.POST.get('pic_type')
         context['table_dict'] = table_trans[depart]
         context['summary'] = request.POST.get('summary')
-        context['dat'] = []
-        context['index'] = []
-        print(request.POST)
+        context['isSorted'] = request.POST.get('isSorted')
+        context['data_set'] = {}
         context['host'] = DEFAULT_HOST
         context['script_list'] = []
         if not context['summary']:
@@ -156,15 +155,29 @@ def statistic_view(request, depart):
                 # 根据作图的类型获取统计图对象
                 if context['pic_type'] == 'Bar':
                     this_plot = PlotBar()
-                    context['echarts'] = this_plot.bar_plot(dat=context['dat'],
-                                                            ind=context['index'])
+                    context['echarts'] = this_plot.bar_plot(dat=context['data_set'],
+                                                            sort=context['isSorted'])
                     context['script_list'] = this_plot.script_list
+                elif context['pic_type'] == 'Pie':
+                    this_plot = PlotPie()
+                    context['echarts'] = this_plot.plot_pie(dat=context['data_set'],
+                                                            sort=context['isSorted'])
+                    context['script_list'] = this_plot.script_list
+                elif context['pic_type'] == 'Line':
+                    this_plot = PlotLine()
+                    context['echarts'] = this_plot.plot_line(dat=context['data_set'],
+                                                             sort=context['isSorted'])
             except Exception as e:
                 print(e)
-        # else:
-            # try:
-            #     # 先从数据库中获取用于统计作图的数据
-            #     context =
+        else:
+            try:
+                # 先从数据库中获取用于统计作图的数据
+                context['data_set'] = get_statistic_data()
+                this_plot = MultiPlot()
+                context['script_list'] = this_plot.script_list
+                context['echarts'] = this_plot.multi_plot(context['data_set'])
+            except Exception as e:
+                print(e)
         return render(request, 'acorndx/includes/plotData.html', context)
 
 

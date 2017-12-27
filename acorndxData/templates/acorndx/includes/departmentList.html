@@ -2,7 +2,7 @@
 <li><a href="{% url 'depart' depart='financial_record' %}">财务数据</a></li>
 <li><a href="{% url 'depart' depart='person_info'%}">样本基本信息</a></li>
 <li><a href="{% url 'depart' depart='sale_info'%}">销售数据</a></li>
-<li><a href="#">实体瘤患者基本病情与治疗史</a></li>
-<li><a href="#">实体瘤基因检测结果</a></li>
-<li><a href="#">血液病患者基本病情与检测治疗史</a></li>
-<li><a href="#">血液病基因检测结果</a></li>
+<li><a href="{% url 'depart' depart='cancer_info' %}">实体瘤患者基本病情与治疗史</a></li>
+<li><a href="{% url 'depart' depart='cancer_result' %}">实体瘤基因检测结果</a></li>
+<li><a href="{% url 'depart' depart='blood_info' %}">血液病患者基本病情与检测治疗史</a></li>
+<li><a href="{% url 'depart' depart='blood_result' %}">血液病基因检测结果</a></li>

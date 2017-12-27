@@ -4,6 +4,11 @@
         <script src="{{ host }}/{{ file }}.js"></script>
     {% endfor %}
 {% endblock %}
+
 {% block plot %}
-    {{ echarts|safe}}
+    {% if echarts %}
+        {{ echarts|safe}}
+    {% else %}
+        <p>无数据展示</p>
+    {% endif %}
 {% endblock %}
