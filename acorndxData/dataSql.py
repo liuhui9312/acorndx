@@ -21,7 +21,8 @@ table_dict = {'financial_record': FinancialRecord,
               'blood_info': BloodClinicInfo,
               'cancer_info': CancerClinicInfo,
               'blood_result': BloodResult,
-              'cancer_result': CancerResult}
+              'cancer_result': CancerResult
+              }
 
 
 def update_or_create(table_name, tp_dict, context):
