@@ -1,15 +1,19 @@
-import os,json, time
+import os
+import json
+import codecs
+import csv
+from django.http import HttpResponse
 from django.contrib import auth
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 # from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, HttpResponse
+from django.shortcuts import render, redirect
 from acorndx.form import UserForm
 from django.views.decorators.csrf import csrf_exempt
 from acorndxData.dataSql import *
 from pyecharts.constants import DEFAULT_HOST
 from acorndxData.dataPlot import *
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.paginator import Paginator
 # Create your views here.
 # 第四个是 auth中用户权限有关的类。auth可以设置每个用户的权限。
 
@@ -144,9 +148,8 @@ def statistic_view(request, depart):
         context['pic_type'] = request.POST.get('pic_type')
         context['table_dict'] = table_trans[depart]
         context['summary'] = request.POST.get('summary')
-        context['dat'] = []
-        context['index'] = []
-        print(request.POST)
+        context['isSorted'] = request.POST.get('isSorted')
+        context['data_set'] = {}
         context['host'] = DEFAULT_HOST
         context['script_list'] = []
         if not context['summary']:
@@ -156,15 +159,29 @@ def statistic_view(request, depart):
                 # 根据作图的类型获取统计图对象
                 if context['pic_type'] == 'Bar':
                     this_plot = PlotBar()
-                    context['echarts'] = this_plot.bar_plot(dat=context['dat'],
-                                                            ind=context['index'])
+                    context['echarts'] = this_plot.bar_plot(dat=context['data_set'],
+                                                            sort=context['isSorted'])
                     context['script_list'] = this_plot.script_list
+                elif context['pic_type'] == 'Pie':
+                    this_plot = PlotPie()
+                    context['echarts'] = this_plot.plot_pie(dat=context['data_set'],
+                                                            sort=context['isSorted'])
+                    context['script_list'] = this_plot.script_list
+                elif context['pic_type'] == 'Line':
+                    this_plot = PlotLine()
+                    context['echarts'] = this_plot.plot_line(dat=context['data_set'],
+                                                             sort=context['isSorted'])
             except Exception as e:
                 print(e)
-        # else:
-            # try:
-            #     # 先从数据库中获取用于统计作图的数据
-            #     context =
+        else:
+            try:
+                # 先从数据库中获取用于统计作图的数据
+                context['data_set'] = get_statistic_data()
+                this_plot = MultiPlot()
+                context['script_list'] = this_plot.script_list
+                context['echarts'] = this_plot.multi_plot(context['data_set'])
+            except Exception as e:
+                print(e)
         return render(request, 'acorndx/includes/plotData.html', context)
 
 
@@ -179,8 +196,10 @@ def load_data(request, table):
         context['error_log'] = []
         context['file_error'] = False
         table_dir = './acorndxData/upload/{0}'.format(table)
+        context['download'] = True if request.POST.get('download') else False
+        print(context['download'])
         my_data = request.FILES.get('file_name', None)
-        if my_data:
+        if my_data and not context['download']:
             # 如果上传的数据不为空，将数据存到服务器中
             file_name = my_data.__dict__['_name']
             if not os.path.exists(table_dir):
@@ -199,9 +218,14 @@ def load_data(request, table):
             else:
                 context['state'] = 0
             return render(request, 'acorndx/uploadState.html', context)
-        else:
+        elif not my_data and not context['download']:
             context['Departs'] = table
             return render(request, 'acorndx/includes/departView.html', context)
+        elif context['download']:
+            # download data
+            context['Departs'] = table
+            # get data
+            return HttpResponse('未开发')
 
 
 def get_data(request, depart):
@@ -250,3 +274,18 @@ def analyst_view(request, depart):
         context['executing_state'] = 'running'
         # 添加执行方法 run(context)
         return render(request, 'acorndx/includes/analystResult.html', context)
+
+
+def output(request):
+    response = HttpResponse(content_type='text/csv')
+    # 导出xls文件
+    # response['Content-Type'] = 'application/vnd.ms-excel;charset=UTF-8'
+    response['Content-Disposition'] = 'attachment; filename=%s' % 'user.csv'
+    objs = PersonInfo.objects.all()
+    # 解决中文乱码的问题
+    response.write(codecs.BOM_UTF8)
+    writer = csv.writer(response)
+    writer.writerow(['样本编号', '身份证号', '邮箱'])
+    for o in objs:
+        writer.writerow([o.sample_id, o.certificate_id, o.contact_email])
+    return response
