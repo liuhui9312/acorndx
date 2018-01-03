@@ -1,15 +1,19 @@
-import os,json, time
+import os
+import json
+import codecs
+import csv
+from django.http import HttpResponse
 from django.contrib import auth
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 # from django.contrib.auth.decorators import login_required
-from django.shortcuts import render, redirect, HttpResponse
+from django.shortcuts import render, redirect
 from acorndx.form import UserForm
 from django.views.decorators.csrf import csrf_exempt
 from acorndxData.dataSql import *
 from pyecharts.constants import DEFAULT_HOST
 from acorndxData.dataPlot import *
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.paginator import Paginator
 # Create your views here.
 # 第四个是 auth中用户权限有关的类。auth可以设置每个用户的权限。
 
@@ -192,8 +196,10 @@ def load_data(request, table):
         context['error_log'] = []
         context['file_error'] = False
         table_dir = './acorndxData/upload/{0}'.format(table)
+        context['download'] = True if request.POST.get('download') else False
+        print(context['download'])
         my_data = request.FILES.get('file_name', None)
-        if my_data:
+        if my_data and not context['download']:
             # 如果上传的数据不为空，将数据存到服务器中
             file_name = my_data.__dict__['_name']
             if not os.path.exists(table_dir):
@@ -212,9 +218,14 @@ def load_data(request, table):
             else:
                 context['state'] = 0
             return render(request, 'acorndx/uploadState.html', context)
-        else:
+        elif not my_data and not context['download']:
             context['Departs'] = table
             return render(request, 'acorndx/includes/departView.html', context)
+        elif context['download']:
+            # download data
+            context['Departs'] = table
+            # get data
+            return HttpResponse('未开发')
 
 
 def get_data(request, depart):
@@ -263,3 +274,18 @@ def analyst_view(request, depart):
         context['executing_state'] = 'running'
         # 添加执行方法 run(context)
         return render(request, 'acorndx/includes/analystResult.html', context)
+
+
+def output(request):
+    response = HttpResponse(content_type='text/csv')
+    # 导出xls文件
+    # response['Content-Type'] = 'application/vnd.ms-excel;charset=UTF-8'
+    response['Content-Disposition'] = 'attachment; filename=%s' % 'user.csv'
+    objs = PersonInfo.objects.all()
+    # 解决中文乱码的问题
+    response.write(codecs.BOM_UTF8)
+    writer = csv.writer(response)
+    writer.writerow(['样本编号', '身份证号', '邮箱'])
+    for o in objs:
+        writer.writerow([o.sample_id, o.certificate_id, o.contact_email])
+    return response

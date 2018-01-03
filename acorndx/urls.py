@@ -22,6 +22,7 @@ urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^login', views.login_view, name='login'),
     url(r'^logout', views.logout_view),
+    url(r'^output/$', views.output, name='download'),
     url(r'^register', views.register_view, name='register'),
     url(r'^depart/(?P<depart>\w+)', views.depart_view, name='depart'),
     url(r'^printData/(?P<table>\w+)', views.data_view, name='printData'),
