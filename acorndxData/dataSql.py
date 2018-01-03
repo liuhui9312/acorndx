@@ -11,16 +11,18 @@ import datetime
 # from django.contrib.auth.models import User
 # from django.contrib.auth import authenticate
 # from acorndxData.models import DetectInfo
-from acorndxData.models import FinancialRecord
-from acorndxData.models import ItemsInfo
-from acorndxData.models import PersonInfo
-from acorndxData.models import SaleInfo
+from acorndxData.models import *
 from acorndxData.configure import table_trans
 
 table_dict = {'financial_record': FinancialRecord,
               'items_info': ItemsInfo,
               'person_info': PersonInfo,
-              'sale_info': SaleInfo}
+              'sale_info': SaleInfo,
+              'blood_info': BloodClinicInfo,
+              'cancer_info': CancerClinicInfo,
+              'blood_result': BloodResult,
+              'cancer_result': CancerResult
+              }
 
 
 def update_or_create(table_name, tp_dict, context):
@@ -142,6 +144,45 @@ def upload_data(file_path, project, context):
         return context
 
 
+def get_xy(xlab, ylab, data, group_by, groups):
+    x_index = list(set(data[xlab]))
+    values = []
+    # 目前分组主要是按照时间来(按年,按月)
+    if group_by == '':
+        for x in x_index:
+            tp = list(data.ix[data.ix[:, xlab] == x, ylab])
+            if len(tp) > 0:
+                if tp[0].isdigit():
+                    values.append(sum([float(val) for val in tp]))
+                else:
+                    values.append([tp.count(val) for val in tp])
+        new_set = pd.DataFrame({'index': x_index, ylab: values})
+        return new_set
+    else:
+        if group_by == 'month':
+            data['receipt_date'] = ['{0}/{1}'.format(val[0], val[1]) for val in groups]
+        else:
+            data['receipt_date'] = [str(val[0]) for val in groups]
+        groups = list(set(data['receipt_date']))
+        values = {val: [] for val in groups}
+        for g in groups:
+            for x in x_index:
+                # 以收样日期作为分组
+                tp = list(data[ylab][(data['receipt_date'] == g) & (data[xlab] == x)])
+                if len(tp):
+                    if tp[0].isdigit():
+                        values[g].append(sum([float(val) for val in tp]))
+                    else:
+                        values[g].append(tp.count(val) for val in tp)
+                else:
+                    values[g].append(0)
+        new_set = values.copy()
+        new_set['index'] = x_index
+        new_set = pd.DataFrame(new_set)
+        # new_set.sort_values(by=)
+        return new_set
+
+
 def get_plot_data(context):
     table = context['table']
     # print(table)
@@ -153,23 +194,22 @@ def get_plot_data(context):
         for dt in data:
             pd_data.append(dt.__dict__)
         pd_data = pd.DataFrame(pd_data)
-        index = list(set(pd_data[context['x_label']]))
-        value = []
-        for x in index:
-            tp = list(pd_data.ix[pd_data.ix[:, context['x_label']] == x, context['y_label']])
-            if tp[0].isdigit():
-                value.append(sum([int(val) for val in tp]))
-            else:
-                value.append([tp.count(val) for val in tp])
-        context['dat'] = {context['y_label']: value}
-        context['index'] = [str(val) for val in index]
+        context['data_set'] = get_xy(xlab=context['x_label'], ylab=context['y_label'],
+                                     data=pd_data, group_by='', groups=[])
+        # 将统计项的标题由数据库表头改成中文表头
+        cols = list(context['data_set'].columns)
+        for i in list(range(len(cols))):
+            if cols[i] in context['table_dict'].keys():
+                cols[i] = context['table_dict'][cols[i]]
+        context['data_set'].columns = cols
     return context
 
 
-def get_statistic_data(context):
+def get_statistic_data():
     data1 = FinancialRecord.objects.all()
     data2 = PersonInfo.objects.all()
     data3 = SaleInfo.objects.all()
+    data_set = {}
     # 将数据库中的数据转化成DataFrame形式
     data1 = [val.__dict__ for val in data1]
     data2 = [val.__dict__ for val in data2]
@@ -177,7 +217,22 @@ def get_statistic_data(context):
     data1 = pd.DataFrame(data1)
     data2 = pd.DataFrame(data2)
     data3 = pd.DataFrame(data3)
-    data = pd.merge(data1, data2, on=['sample_id'])
-    data = pd.merge(data, data3, on=['sample_id'])
-    # 各个城市销量排名，按月
-
+    fin_data = pd.merge(data1, data2, on=['sample_id'])
+    fin_data = pd.merge(fin_data, data3, on=['sample_id'])
+    groups = [(val.year, val.month) for val in fin_data['receipt_date']]
+    try:
+        data_set['各城市按月销量统计'] = get_xy(xlab='cities', ylab='sale_price',
+                                       data=fin_data, group_by='month', groups=groups)
+        data_set['各城市按年销量统计'] = get_xy(xlab='cities', ylab='sale_price',
+                                       data=fin_data, group_by='year', groups=groups)
+        data_set['各代表按月销量统计'] = get_xy(xlab='market_represent', ylab='sale_price',
+                                       data=fin_data, group_by='month', groups=groups)
+        data_set['各代表按年销量统计'] = get_xy(xlab='market_represent', ylab='sale_price',
+                                       data=fin_data, group_by='year', groups=groups)
+        data_set['各套餐按年销量统计'] = get_xy(xlab='detect_content', ylab='sale_price',
+                                       data=fin_data, group_by='year', groups=groups)
+        data_set['各套餐按月销量统计'] = get_xy(xlab='detect_content', ylab='sale_price',
+                                       data=fin_data, group_by='month', groups=groups)
+    except Exception as e:
+        print(e)
+    return data_set
