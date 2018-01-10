@@ -10,21 +10,18 @@ import datetime
 # from django.contrib import auth
 # from django.contrib.auth.models import User
 # from django.contrib.auth import authenticate
-# from acorndxData.models import DetectInfo
 from acorndxData.models import *
 from acorndxData.configure import table_trans
-
+'''
 table_dict = {'financial_record': FinancialRecord,
-              'items_info': ItemsInfo,
               'person_info': PersonInfo,
-              'sale_info': SaleInfo,
               'blood_info': BloodClinicInfo,
               'cancer_info': CancerClinicInfo,
               'blood_result': BloodResult,
               'cancer_result': CancerResult
               }
-
-
+'''
+'''
 def update_or_create(table_name, tp_dict, context):
     # project 是数据表的基础类
     project = table_dict[table_name]
@@ -89,6 +86,7 @@ def get_all_data(project):
                                          else str(tp_data[val])
                                          for val in context['heads']])
         return context
+'''
 
 
 def reverse(table, value):
@@ -101,7 +99,7 @@ def reverse(table, value):
     else:
         return None
 
-
+'''
 def upload_data(file_path, project, context):
     if project in table_dict.keys():
         table_name = project
@@ -142,6 +140,7 @@ def upload_data(file_path, project, context):
             print(e)
             context['file_error'] = True
         return context
+'''
 
 
 def get_xy(xlab, ylab, data, group_by, groups):
@@ -182,7 +181,7 @@ def get_xy(xlab, ylab, data, group_by, groups):
         # new_set.sort_values(by=)
         return new_set
 
-
+'''
 def get_plot_data(context):
     table = context['table']
     # print(table)
@@ -208,17 +207,17 @@ def get_plot_data(context):
 def get_statistic_data():
     data1 = FinancialRecord.objects.all()
     data2 = PersonInfo.objects.all()
-    data3 = SaleInfo.objects.all()
+    # data3 = SaleInfo.objects.all()
     data_set = {}
     # 将数据库中的数据转化成DataFrame形式
     data1 = [val.__dict__ for val in data1]
     data2 = [val.__dict__ for val in data2]
-    data3 = [val.__dict__ for val in data3]
+    # data3 = [val.__dict__ for val in data3]
     data1 = pd.DataFrame(data1)
     data2 = pd.DataFrame(data2)
-    data3 = pd.DataFrame(data3)
+    # data3 = pd.DataFrame(data3)
     fin_data = pd.merge(data1, data2, on=['sample_id'])
-    fin_data = pd.merge(fin_data, data3, on=['sample_id'])
+    # fin_data = pd.merge(fin_data, data3, on=['sample_id'])
     groups = [(val.year, val.month) for val in fin_data['receipt_date']]
     try:
         data_set['各城市按月销量统计'] = get_xy(xlab='cities', ylab='sale_price',
@@ -236,3 +235,21 @@ def get_statistic_data():
     except Exception as e:
         print(e)
     return data_set
+'''
+
+
+def get_department(account=''):
+    departs = Department.objects.all()
+    # 通过登录的账户信息以及UserInfo表获取该账户的身份信息
+    # 通过身份信息获取其能看到的界面
+    user = UserInfo.objects.filter(account=account)
+    if user:
+        user = user[0]
+        user_items = list(user.userRight)
+        print(user_items)
+        departs_dic = {val.department: val.departmentName
+                       for val in departs if str(val.departmentId) in user_items}
+        departs_dic = {val: departs_dic[val] for val in sorted(departs_dic.keys())}
+    else:
+        departs_dic = None
+    return departs_dic

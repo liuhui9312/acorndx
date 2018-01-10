@@ -38,7 +38,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.forms',
-    'django_echarts',
     'acorndxData',
 ]
 
@@ -80,7 +79,7 @@ WSGI_APPLICATION = 'acorndx.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'acorndx',
+        'NAME': 'acorndxNew',
         'USER': 'root',
         'PASSWORD': 'mysql123',
         'HOST': '127.0.0.1',

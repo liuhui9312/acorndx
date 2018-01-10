@@ -6,8 +6,10 @@
     <div class="container">
         <form class="form-signin" action="{% url 'register' %}" method="post" accept-charset="utf-8" enctype="multipart/form-data">
             {% csrf_token %}
-            <label for="username" class="sr-only">用户名</label>
-            <input type="text" name="username" id="'username"class="form-control" placeholder="请输入用户名">
+            <label for="'chineseName" class="sr-only">姓名</label>
+            <input type="text" class="form-control" name="chineseName" id="chineseName" placeholder="请输入真实姓名">
+            <label for="username" class="sr-only">账号</label>
+            <input type="text" name="username" id="'username" class="form-control" placeholder="请输入账号">
             <label for="password" class="sr-only">密码</label>
             <input type="password" name="password" id="password" class="form-control" placeholder="请输入6-12位密码">
             <label for="password" class="sr-only">再输一遍</label>

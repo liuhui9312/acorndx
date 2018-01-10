@@ -14,6 +14,7 @@ count_by = (
 
 
 class UserForm(forms.Form):
+    chineseName = forms.CharField(max_length=20)
     username = forms.CharField(max_length=30)
     password = forms.CharField(max_length=30)
     password2 = forms.CharField(max_length=30)
