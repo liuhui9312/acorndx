@@ -5,237 +5,31 @@
 # @Descript: 
 # @File    : dataSql.py
 # @Software: PyCharm
+import os
 import pandas as pd
-import datetime
+from django.apps import apps
 # from django.contrib import auth
 # from django.contrib.auth.models import User
 # from django.contrib.auth import authenticate
 from acorndxData.models import *
 from acorndxData.configure import table_trans
-'''
-table_dict = {'financial_record': FinancialRecord,
-              'person_info': PersonInfo,
-              'blood_info': BloodClinicInfo,
-              'cancer_info': CancerClinicInfo,
-              'blood_result': BloodResult,
-              'cancer_result': CancerResult
-              }
-'''
-'''
-def update_or_create(table_name, tp_dict, context):
-    # project 是数据表的基础类
-    project = table_dict[table_name]
-    p = project()
-    try:
-        if table_name == 'items_info':
-            if not project.objects.filter(product_id=tp_dict['product_id']):
-                context['create_num'] += 1
-            else:
-                p = project.objects.filter(product_id=tp_dict['product_id'])[0]
-        elif table_name != 'items_info':
-            if not project.objects.filter(sample_id=tp_dict['sample_id']):
-                # print('创建')
-                context['create_num'] += 1
-            else:
-                # print('更新')
-                p = project.objects.filter(sample_id=tp_dict['sample_id'])[0]
-        # print(project.__dict__)
-        repeat = 1
-        for title in tp_dict.keys():
-            # 判断读取的记录和数据库中的是否有差异
-            # setattr 设定类的属性值
-            if p.__dict__[title] != tp_dict[title] and tp_dict[title] != 'nan':
-                setattr(p, title, tp_dict[title])
-            else:
-                repeat += 1
-        p.save()
-        if len(list(tp_dict.keys())) == repeat:
-            context['repeat'] += 1
-    except Exception as e:
-        context['error_num'] += 1
-        if 'sample_id' in tp_dict.keys():
-            context['error_log'].append('{}数据更新失败！'.format(tp_dict['sample_id']))
-        else:
-            context['error_log'].append('{}数据更新失败！'.format(tp_dict['product_id']))
-        print(str(e))
-    finally:
-        del p
 
 
-def get_all_data(project):
-    # 查询project所有的数据
-    context = {}
-    if project in table_dict.keys():
-        table_name = project
-        project = table_dict[project]
-        data_all = project.objects.all()
-        if len(data_all) != 0:
-            context['datas'] = []
-            for tp_data in data_all:
-                tp_data = tp_data.__dict__
-                if 'heads' not in context.keys():
-                    context['heads'] = [val for val in tp_data.keys() if not val.startswith('_') and val != 'id']
-                    try:
-                        context['heads_ch'] = [table_trans[table_name][val] for
-                                               val in context['heads']]
-                    except Exception as e:
-                        print(e)
-                context['datas'].append([tp_data[val]
-                                         if not isinstance(tp_data[val],
-                                                           datetime.date)
-                                         else str(tp_data[val])
-                                         for val in context['heads']])
-        return context
-'''
+def get_table_trans():
+    # 获取业务数据库的表名的中英文对照表
+    table_items = DataStructure.objects.all()
+    table_items = {val.itemsChinese: val.itemsEnglish for val in table_items}
+    return table_items
 
 
-def reverse(table, value):
-    key = ''
-    for key in table_trans[table].keys():
-        if table_trans[table][key] == value:
-            break
-    if key != '':
-        return key
-    else:
-        return None
-
-'''
-def upload_data(file_path, project, context):
-    if project in table_dict.keys():
-        table_name = project
-        # project = table_dict[project]
-        try:
-            table_data = pd.read_excel(file_path)
-            # print(type(project))
-            my_data = []
-            total_num = 0
-            for i in list(table_data.index):
-                tp_dict = {}
-                total_num += 1
-                # 将表中的中文表头转换成对应的英文数据库表头，
-                # 如果不在转换的字典中，则该列数据不能存储到数据库中；
-                # 要去掉表格中表头的空格，否则匹配不上
-                for j in range(len(list(table_data.columns))):
-                    title = list(table_data.columns)[j].replace(' ', '')
-                    title = reverse(table_name, title)
-                    if title:
-                        if 'date' not in title:
-                            tp_dict[title] = str(table_data.ix[i, j])
-                        else:
-                            tp_dict[title] = str(table_data.ix[i, j]).split(' ')[0]
-                if len(tp_dict) < len(table_trans[table_name]) / 2:
-                    # 如果要更新的数据属性数量少于对应表的属性一半数量
-                    # 中断更新
-                    context['file_error'] = True
-                    return context
-                try:
-                    update_or_create(table_name=table_name,
-                                     tp_dict=tp_dict,
-                                     context=context)
-                except Exception as e:
-                    print(e)
-                my_data.append(tp_dict)
-            context['total_num'] = total_num
-        except Exception as e:
-            print(e)
-            context['file_error'] = True
-        return context
-'''
-
-
-def get_xy(xlab, ylab, data, group_by, groups):
-    x_index = list(set(data[xlab]))
-    values = []
-    # 目前分组主要是按照时间来(按年,按月)
-    if group_by == '':
-        for x in x_index:
-            tp = list(data.ix[data.ix[:, xlab] == x, ylab])
-            if len(tp) > 0:
-                if tp[0].isdigit():
-                    values.append(sum([float(val) for val in tp]))
-                else:
-                    values.append([tp.count(val) for val in tp])
-        new_set = pd.DataFrame({'index': x_index, ylab: values})
-        return new_set
-    else:
-        if group_by == 'month':
-            data['receipt_date'] = ['{0}/{1}'.format(val[0], val[1]) for val in groups]
-        else:
-            data['receipt_date'] = [str(val[0]) for val in groups]
-        groups = list(set(data['receipt_date']))
-        values = {val: [] for val in groups}
-        for g in groups:
-            for x in x_index:
-                # 以收样日期作为分组
-                tp = list(data[ylab][(data['receipt_date'] == g) & (data[xlab] == x)])
-                if len(tp):
-                    if tp[0].isdigit():
-                        values[g].append(sum([float(val) for val in tp]))
-                    else:
-                        values[g].append(tp.count(val) for val in tp)
-                else:
-                    values[g].append(0)
-        new_set = values.copy()
-        new_set['index'] = x_index
-        new_set = pd.DataFrame(new_set)
-        # new_set.sort_values(by=)
-        return new_set
-
-'''
-def get_plot_data(context):
-    table = context['table']
-    # print(table)
-    if context['group'] == '--':
-        project = table_dict[table]
-        data = project.objects.all()
-        # 将数据库中的数据转化成DataFrame形式
-        pd_data = []
-        for dt in data:
-            pd_data.append(dt.__dict__)
-        pd_data = pd.DataFrame(pd_data)
-        context['data_set'] = get_xy(xlab=context['x_label'], ylab=context['y_label'],
-                                     data=pd_data, group_by='', groups=[])
-        # 将统计项的标题由数据库表头改成中文表头
-        cols = list(context['data_set'].columns)
-        for i in list(range(len(cols))):
-            if cols[i] in context['table_dict'].keys():
-                cols[i] = context['table_dict'][cols[i]]
-        context['data_set'].columns = cols
-    return context
-
-
-def get_statistic_data():
-    data1 = FinancialRecord.objects.all()
-    data2 = PersonInfo.objects.all()
-    # data3 = SaleInfo.objects.all()
-    data_set = {}
-    # 将数据库中的数据转化成DataFrame形式
-    data1 = [val.__dict__ for val in data1]
-    data2 = [val.__dict__ for val in data2]
-    # data3 = [val.__dict__ for val in data3]
-    data1 = pd.DataFrame(data1)
-    data2 = pd.DataFrame(data2)
-    # data3 = pd.DataFrame(data3)
-    fin_data = pd.merge(data1, data2, on=['sample_id'])
-    # fin_data = pd.merge(fin_data, data3, on=['sample_id'])
-    groups = [(val.year, val.month) for val in fin_data['receipt_date']]
-    try:
-        data_set['各城市按月销量统计'] = get_xy(xlab='cities', ylab='sale_price',
-                                       data=fin_data, group_by='month', groups=groups)
-        data_set['各城市按年销量统计'] = get_xy(xlab='cities', ylab='sale_price',
-                                       data=fin_data, group_by='year', groups=groups)
-        data_set['各代表按月销量统计'] = get_xy(xlab='market_represent', ylab='sale_price',
-                                       data=fin_data, group_by='month', groups=groups)
-        data_set['各代表按年销量统计'] = get_xy(xlab='market_represent', ylab='sale_price',
-                                       data=fin_data, group_by='year', groups=groups)
-        data_set['各套餐按年销量统计'] = get_xy(xlab='detect_content', ylab='sale_price',
-                                       data=fin_data, group_by='year', groups=groups)
-        data_set['各套餐按月销量统计'] = get_xy(xlab='detect_content', ylab='sale_price',
-                                       data=fin_data, group_by='month', groups=groups)
-    except Exception as e:
-        print(e)
-    return data_set
-'''
+def get_table_class():
+    # 获取业务数据库中各表的对象和各表包含的列名
+    app_models = apps.get_app_config('acorndxData').get_models()
+    # 需要注意上传数据中并不包含系统的ID
+    table_dict = {val.__doc__.split('(')[0]: [val,
+                                              val.__doc__.split('(')[-1].replace(')', '').split(',')]
+                  for val in app_models}
+    return table_dict
 
 
 def get_department(account=''):
@@ -246,10 +40,261 @@ def get_department(account=''):
     if user:
         user = user[0]
         user_items = list(user.userRight)
-        print(user_items)
+        # print(user_items)
         departs_dic = {val.department: val.departmentName
                        for val in departs if str(val.departmentId) in user_items}
-        departs_dic = {val: departs_dic[val] for val in sorted(departs_dic.keys())}
+        departs_dic = {val: departs_dic[val] for val in departs_dic.keys()}
     else:
         departs_dic = None
     return departs_dic
+
+
+def get_wr_table(account='', choice='w'):
+    table_set = DataStructure.objects.all()
+    user = UserInfo.objects.filter(account=account)
+    if user:
+        user = user[0]
+        user_depart = str(user.userDepartmentId_id)
+        tables = []
+        if choice == 'w':
+            tables = [val.belongTable for val in table_set if user_depart in str(val.writeRight)]
+            tables = list(set(tables))
+        elif choice == 'r':
+            tables = [val.belongTable for val in table_set if user_depart in str(val.readRight)]
+            tables = list(set(tables))
+        # print(write_tables)
+        if len(tables):
+            tables = {table_trans[key]: key for key in list(table_trans.keys())}
+            return tables
+    else:
+        return None
+
+
+def update_or_create(table_name, tp_dict, context):
+    # project 是数据表的基础类
+    table_dict = get_table_class()
+    project = table_dict[table_name][0]
+    p = project()
+    try:
+        if not project.objects.filter(sample_id=tp_dict['sample_id']):
+            # print('创建')
+            context['create_num'] += 1
+        else:
+            # print('更新')
+            p = project.objects.filter(sample_id=tp_dict['sample_id'])[0]
+        # print(project.__dict__)
+        repeat = 0
+        for title in tp_dict.keys():
+            # 判断读取的记录和数据库中的是否有差异
+            # setattr 设定类的属性值
+            if title not in p.__dict__.keys():
+                context['error_log'].append('warring {0} 不是选择上传的表中的字段'.format(title))
+                continue
+            if str(p.__dict__[title]) != str(tp_dict[title])\
+                    and tp_dict[title] != 'nan':
+                if isinstance(p.__dict__[title], float) or isinstance(p.__dict__[title], int):
+                    if float(p.__dict__[title]) - float(tp_dict[title]) == 0:
+                        repeat += 1
+                        continue
+                setattr(p, title, tp_dict[title])
+                # print(p.__dict__[title], tp_dict[title])
+            else:
+                repeat += 1
+        p.save()
+        if len(list(tp_dict.keys())) == repeat:
+            # repeat的大小和tp_dict的值完全一样，说明没有更新，完全一致的
+            context['repeat'] += 1
+    except Exception as e:
+        context['error_num'] += 1
+        if 'sample_id' in tp_dict.keys():
+            context['error_log'].append('error:{}数据更新失败！'.format(tp_dict['sample_id']))
+        print(str(e)+'\tat update_or_create')
+    finally:
+        del p
+
+
+def upload_data(file_path, modify_table, context):
+    table_dict = get_table_class()
+    table_items = get_table_trans()
+    if modify_table in table_dict.keys():
+        table_name = modify_table
+        # project = table_dict[project]
+        try:
+            table_data = pd.read_excel(file_path)
+            # print(type(project))
+            # my_data = []
+            total_num = 0
+            for i in list(table_data.index):
+                tp_dict = {}
+                total_num += 1
+                # 将表中的中文表头转换成对应的英文数据库表头，
+                # 如果不在转换的字典中，则该列数据不能存储到数据库中；
+                # 要去掉表格中表头的空格，否则匹配不上
+                for j in range(len(list(table_data.columns))):
+                    title = list(table_data.columns)[j].replace(' ', '')
+                    if title in table_items.keys():
+                        title = table_items[title]
+                    else:
+                        context['error_log'].append('数据库中没有{0}字段，未能导入！'.format(title))
+                    if title:
+                        if 'date' not in title:
+                            tp_dict[title] = str(table_data.ix[i, j])
+                        else:
+                            tp_dict[title] = str(table_data.ix[i, j]).split(' ')[0]
+                if abs(len(tp_dict) + 1 - len(table_dict[table_name][1])) > 3:
+                    # 如果要更新的数据表相差超过三个表项
+                    # + 1 是因为数据表中无id这一系统自增表项
+                    # 中断更新
+                    context['file_error'] = True
+                    return context
+                update_or_create(table_name=table_name,
+                                 tp_dict=tp_dict,
+                                 context=context)
+                # my_data.append(tp_dict)
+            context['total_num'] = total_num
+        except Exception as e:
+            print(str(e)+'\tat upload_data')
+            context['file_error'] = True
+        finally:
+            os.remove(file_path)
+            print('remove {}'.format(file_path))
+        return context
+
+
+def get_all_data(depart):
+    # 查询project所有的数据
+    depart_id = []
+    for p in Department.objects.filter(department=depart):
+        depart_id.append(str(p.departmentId))
+    # print('部门id-{0}'.format(depart_id[0]))
+    read_sets = [(val.belongTable, val.itemsEnglish,
+                  val.itemsChinese) for val in DataStructure.objects.all()
+                 if depart_id[0] in str(val.readRight)]
+    en_ch = {val[1]: val[2] for val in read_sets}
+    read_tables = list(set([val[0] for val in read_sets]))
+    table_dict = get_table_class()
+    data_sets = {}
+    data_items = []
+    for table in read_tables:
+        if table in table_dict.keys():
+            data_sets[table] = []
+            project = table_dict[table][0]
+            p = project
+            for val in p.objects.all().values():
+                tp = {}
+                for item in val.keys():
+                    if item in en_ch.keys():
+                        data_items.append(en_ch[item])
+                        if '日期' in en_ch[item]:
+                            tp[en_ch[item]] = str(val[item])
+                        else:
+                            tp[en_ch[item]] = val[item]
+                data_sets[table].append(tp)
+    data_sets = {val: data_sets[val] for val in data_sets.keys()
+                 if len(data_sets[val])}
+    data_items = list(set(data_items))
+    # print(data_items)
+    # print(len(data_items))
+    new_dict = {}
+    for k1, v1 in data_sets.items():
+        for v in v1:
+            if v['样本编号'] not in new_dict.keys():
+                new_dict[v['样本编号']] = v.copy()
+            else:
+                new_dict[v['样本编号']].update(v)
+    for k, v in new_dict.items():
+        for v1 in data_items:
+            if v1 not in v.keys():
+                new_dict[k][v1] = ''
+        # print(len(new_dict[k]))
+    data_sets = list(new_dict.values())
+    return data_sets, data_items, en_ch
+
+
+def get_xy(xlab, ylab, timeLine, group, data):
+    x_index = list(set(data[xlab]))
+    values = {}
+    if timeLine == '--':
+        if group == '--':
+            value = []
+            for x in x_index:
+                tp = list(data.ix[data[xlab] == x, ylab])
+                if len(tp):
+                    tp = ['0' if val == 'nan' else val for val in tp]
+                    if isinstance(tp[0], int) or isinstance(tp[0], float) \
+                            or tp[0].isdigit():
+                        value.append(sum([float(val) for val in tp]))
+                    else:
+                        value.append(len(tp))
+                else:
+                    value.append(0)
+            values[ylab] = value
+        else:
+            groups = list(set(data[group]))
+            for g in groups:
+                value = []
+                for x in x_index:
+                    tp = list(data.ix[(data[xlab] == x) & (data[group] == g),
+                                      ylab])
+                    if len(tp):
+                        tp = ['0' if val == 'nan' else val for val in tp]
+                        if isinstance(tp[0], int) or isinstance(tp[0], float) or \
+                                tp[0].isdigit():
+                            value.append(sum([float(val) for val in tp]))
+                        else:
+                            value.append(len(tp))
+                    else:
+                        value.append(0)
+                values['{0}_{1}'.format(g, ylab)] = value
+    else:
+        if timeLine == 'month':
+            data['送检日期'] = ['{0}/{1}'.format(val.split('-')[0],
+                                             val.split('-')[1])
+                            for val in data['送检日期']]
+        elif timeLine == 'year':
+            data['送检日期'] = ['{0}年'.format(val.split('-')[0]) for val in data['送检日期']]
+        # print(data['送检日期'])
+        time_groups = list(set(data['送检日期']))
+        if group == '--':
+            for t in time_groups:
+                value = []
+                for x in x_index:
+                    tp = list(data[ylab][(data[xlab] == x) & (data['送检日期'] == t)])
+                    if len(tp):
+                        tp = ['0' if val == 'nan' else val for val in tp]
+                        if isinstance(tp[0], int) or isinstance(tp[0], float) \
+                                or tp[0].isdigit():
+                            value.append(sum([float(val) for val in tp]))
+                        else:
+                            value.append(len(tp))
+                    else:
+                        value.append(0)
+                values['{0}_{1}'.format(t, ylab)] = value
+        else:
+            groups = list(set(data[group]))
+            for t in time_groups:
+                for g in groups:
+                    value = []
+                    for x in x_index:
+                        tp = list(data[ylab][(data[xlab] == x) &
+                                             (data['送检日期'] == t) &
+                                             (data[group] == g)])
+                        if len(tp):
+                            tp = ['0' if val == 'nan' else val for val in tp]
+                            if isinstance(tp[0], int) or isinstance(tp[0], float) or tp[0].isdigit():
+                                value.append(sum([float(val) for val in tp]))
+                            else:
+                                value.append(len(tp))
+                        else:
+                            value.append(0)
+                    values['{0}_{1}_{2}'.format(t, g, ylab)] = value
+    values['index'] = x_index
+    # for k, v in values.items():
+    #     print(k)
+    #     print(v)
+    return values
+
+
+def get_echarts(pic_type, is_sorted, data):
+    if pic_type == 'Bar':
+        pass

@@ -15,84 +15,133 @@ from pyecharts import Geo
 from pyecharts import Timeline
 
 
-class PlotBar:
+class Plot:
     # 柱状图/条形图
     def __init__(self):
         self.data = ''
-        self.bar = Bar()
+        self.page = ''
+        self.overlap = ''
         self.sort = '0'
-        self.script_list = self.bar.get_js_dependencies()
+        self.timeLine = ''
+        self.script_list = ''
+        self.project = ''
 
-    def bar_plot(self, dat, sort):
-        self.data = dat
-        self.sort = sort
-        self.bar = Bar(width=900, height=500)
-        for label in list(self.data.columns):
-            if label != 'index':
-                print(list(self.data['index']))
-                print(list(self.data[label]))
-                if self.sort == '1':
-                    self.data = self.data.sort_values(by=label, ascending=True)
-                elif self.sort == '2':
-                    self.data = self.data.sort_values(by=label, ascending=False)
-                self.bar.add(label, list(self.data['index']),
-                             list(self.data[label]),
-                             is_datazoom_show=True,
-                             datazoom_range=[10, 25],
-                             datazoom_type='both',
-                             xaxis_interval=0,
-                             xaxis_rotate=30,
-                             yaxis_rotate=0)
-        return self.bar.render_embed()
+    def get_plot_type(self, pic_type):
+        class_sets = {'Bar': Bar(),
+                      'Line': Line(),
+                      'Pie': Pie(),
+                      'Map': Geo()
+                      }
+        self.project = class_sets[pic_type]
+        return self.project
 
-
-class PlotPie:
-    def __init__(self):
-        self.data = ''
-        self.sort = '0'
-        self.pie = Pie()
-        self.script_list = self.pie.get_js_dependencies()
-
-    def plot_pie(self, dat, sort):
-        self.data = dat
-        self.sort = sort
-        self.pie = Pie()
-        for label in list(self.data.columns):
-            if label != 'index':
-                self.pie.add(label, self.data['index'],
-                             self.data[label],
+    def add_plot(self, label, data, add_type=0, pic_type='Bar'):
+        if pic_type == 'Bar':
+            if add_type == 1:
+                self.project.add(label, list(data['index']),
+                                 list(data[label]),
+                                 is_datazoom_show=True,
+                                 datazoom_range=[10, 25],
+                                 datazoom_type='both',
+                                 xaxis_interval=0,
+                                 xaxis_rotate=30,
+                                 yaxis_rotate=0)
+            elif add_type == 2:
+                self.project.add(label, list(data['index']),
+                                 list(data[label]),
+                                 xaxis_interval=0,
+                                 xaxis_rotate=30,
+                                 yaxis_rotate=0)
+        elif pic_type == 'Pie':
+            self.project.add(label, data['index'],
+                             list(data[label]),
                              radius=[40, 75],
                              legend_pos='right',
                              legend_orient='vertical',
                              is_label_show=True)
-        return self.pie.render_embed()
+        elif pic_type == 'Line':
+            self.project.add(label,
+                             list(data['index']),
+                             list(data[label]),
+                             is_smooth=True)
+        elif pic_type == 'Map':
+            self.project.add(label, list(data['index']),
+                             list(data[label]),
+                             visual_range=[0, 200],
+                             visual_text_color='#fff',
+                             symbol_size=15,
+                             is_visualmap=True)
 
-
-class PlotLine:
-    def __init__(self):
-        self.data = ''
-        self.sort = ''
-        self.line = Line()
-        self.script_list = self.line.get_js_dependencies()
-
-    def plot_line(self, dat, sort):
+    def chart_plot(self, dat, sort, time_line, group, pic_type):
         self.data = dat
         self.sort = sort
-        self.line = Line()
-        try:
-            for label in list(self.data.columns):
-                if label != 'index':
-                    print(list(self.data['index']))
-                    print(list(self.data[label]))
-                    self.line.add(label, list(self.data['index']),
-                                  list(self.data[label]),
-                                  is_smooth=True,
-                                  mark_line=['average']
-                                  )
-                    print(label)
-            return self.line.render_embed()
-        except Exception as e:
-            print('{} in plot line'.format(e))
+        label_set = list([val for val in self.data.columns if val != 'index'])
+        if '_'not in label_set[0]:
+            self.project = self.get_plot_type(pic_type)
+            for label in label_set:
+                if len(label_set) == 1:
+                    if self.sort == '1':
+                        self.data = self.data.sort_values(by=label, ascending=True)
+                    elif self.sort == '2':
+                        self.data = self.data.sort_values(by=label, ascending=False)
+                self.add_plot(label=label, data=self.data, add_type=1, pic_type=pic_type)
+            self.script_list = self.project.get_js_dependencies()
+            return self.project.render_embed()
+        elif len(label_set[0].split('_')) == 2:
+            self.timeLine = Timeline(timeline_bottom=1)
+            if time_line != '--':
+                if pic_type == 'Map':
+                    self.page = Page()
+                for label in label_set:
+                    self.project = self.get_plot_type(pic_type)
+                    if len(label_set) == 1:
+                        if self.sort == '1':
+                            self.data = self.data.sort_values(by=label, ascending=True)
+                        elif self.sort == '2':
+                            self.data = self.data.sort_values(by=label, ascending=False)
+                    self.add_plot(label=label, data=self.data, add_type=2, pic_type=pic_type)
+                    if pic_type == 'Map':
+                        self.page.add(self.project)
+                    else:
+                        self.timeLine.add(self.project, label)
+                if pic_type == 'Map':
+                    self.script_list = self.page.get_js_dependencies()
+                    return self.page.render_embed()
+                else:
+                    self.script_list = self.timeLine.get_js_dependencies()
+                    return self.timeLine.render_embed()
+            elif group != '--':
+                self.project = self.get_plot_type(pic_type)
+                for label in label_set:
+                    if len(label_set) == 1:
+                        if self.sort == '1':
+                            self.data = self.data.sort_values(by=label, ascending=True)
+                        elif self.sort == '2':
+                            self.data = self.data.sort_values(by=label, ascending=False)
+                    self.add_plot(label=label, data=self.data, add_type=1, pic_type=pic_type)
+                self.script_list = self.project.get_js_dependencies()
+                return self.project.render_embed()
+        elif len(label_set[0].split('_')) == 3:
+            time_sets = list(set([val.split('_')[0] for val in label_set]))
+            self.timeLine = Timeline(timeline_bottom=1)
+            if pic_type == 'Map':
+                self.page = Page()
+            for time_set in time_sets:
+                self.project = self.get_plot_type(pic_type)
+                for label in label_set:
+                    if time_set not in label:
+                        continue
+                    self.add_plot(label=label, data=self.data, add_type=2, pic_type=pic_type)
+                if pic_type != 'Map':
+                    self.timeLine.add(self.project, time_set)
+                else:
+                    self.page.add(self.project)
+            if pic_type == 'Map':
+                self.script_list = self.page.get_js_dependencies()
+                return self.page.render_embed()
+            else:
+                self.script_list = self.timeLine.get_js_dependencies()
+                return self.timeLine.render_embed()
 
 
 class PlotBarWithLine:
@@ -124,54 +173,3 @@ class PlotBarWithLine:
         self.overlap.add(self.line)
         return self.overlap.render_embed()
 
-
-class PlotGeo:
-    def __init__(self):
-        self.data = {{'label': []}, }
-        self.titles = ['全国销售情势图', 'data from sale']
-        self.indexes = []
-        self.geo = Geo()
-        self.script_list = self.geo.get_js_dependencies()
-
-    def plot_geo(self, dat, tit, ind):
-        self.data = dat
-        self.titles = tit
-        self.indexes = ind
-        self.geo = Geo(self.titles[0], self.titles[1],
-                       title_pos='center', title_color='#fff',
-                       width=1200, height=600, background_color='#404a59')
-        for label in self.data.keys():
-            self.geo.add(label, self.indexes, self.data[label],
-                         visual_range=[0, 200], visual_text_color='#fff',
-                         symbol_size=15, is_visualmap=True)
-        return self.geo.render_embed()
-
-
-class MultiPlot:
-    def __init__(self):
-        self.data = ''
-        self.timeLine = Timeline()
-        self.page = Page()
-        self.script_list = Bar().get_js_dependencies()
-
-    def multi_plot(self, dat):
-        self.data = dat
-        try:
-            for m_title, tpv1 in self.data.items():
-                self.timeLine = Timeline(is_auto_play=False, timeline_bottom=0)
-                attr = tpv1['index']
-                for m_time in list(tpv1.columns):
-                    if m_time != 'index':
-                        tp_bar = Bar(m_time)
-                        tpv1 = tpv1.sort_values(by=m_time ,ascending=False)
-                        tp_bar.add(m_title, list(tpv1['index']),
-                                   list(tpv1[m_time]),
-                                   xaxis_interval=0,
-                                   xaxis_rotate=30,
-                                   yaxis_rotate=30,)
-                        self.timeLine.add(tp_bar, m_time)
-                self.page.add(self.timeLine)
-            return self.page.render_embed()
-        except Exception as e:
-            print('multi_plot error with {}'.format(str(e)))
-            return None

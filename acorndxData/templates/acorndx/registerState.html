@@ -2,18 +2,18 @@
 {% extends 'acorndx/base.html' %}
 {% block content %}
         {% if userExit %}
-            <h2>请勿重复注册！</h2>
+            <h3>请勿重复注册！</h3>
         {% elif accountRepeat %}
-            <h2>此账号已存在！</h2>
+            <h3>此账号已存在！</h3>
         {% elif passwordError %}
-            <h2>两次输入密码不一致</h2>
+            <h3>两次输入密码不一致</h3>
         {% elif formError %}
-            <h2>请将注册信息填写完整！</h2>
+            <h3>请将注册信息填写完整！</h3>
         {% elif accountError %}
-            <h2>此用户不存在，无法注册，请通过邮件联系管理员</h2>
-            <h2>huiliu@acorndx.com</h2>
+            <h3>此用户不存在，无法注册，请通过邮件联系管理员</h3>
+            <h3>huiliu@acorndx.com</h3>
         {% elif operation %}
-            <h1>欢迎使用金橡医学内部数据管理平台</h1>
-            <h2>{{ operation }}成功</h2>
+            <h3>欢迎使用金橡医学内部数据管理平台</h3>
+            <h3>{{ operation }}成功</h3>
         {% endif %}
 {% endblock %}

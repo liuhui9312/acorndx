@@ -1,33 +1,55 @@
 {% extends 'acorndx/base.html' %}
 {% block head %}
-    <link href="../../../static/css/fileinput.css" media="all" rel="stylesheet" type="text/css"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" media="all" rel="stylesheet" type="text/css"/>
-    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-    <script src="../../../static/js/zh.js" type="text/javascript"></script>
-    <script src="../../../static/js/fileinput.js" type="text/javascript"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" type="text/javascript"></script>
+    <link rel="stylesheet" href="../../../static/css/bootstrap-table.css">
+    <link rel="stylesheet" href="../../../static/css/examples.css">
+
+    <script src="../../../static/js/bootstrap-table.js"></script>
+    <script src="../../../static/js/bootstrap-table-zh-CN.js"></script>
+    <script src="../../../static/js/bootstrap-table-export.js"></script>
+    <script src="../../../static/js/examples.js"></script>
+    <script src="../../../static/js/ga.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('#table').bootstrapTable({
+               data:{{data|safe}}
+            });
+        });
+    </script>
 {% endblock %}
 {% block content %}
     <div class="row">
-        <div class="col-sm-6 col-md-6">
-            <form action="{% url 'printData' table=Departs %}" method="POST">
-                {% csrf_token %}
-                <div class="btn-group" role="group" aria-label="">
-                    <button type="submit" name="detail" class="btn btn-primary" value="detail">详细数据</button>
-                    <button type="submit" name="statistic" class="btn btn-primary" value="statistic">统计结果</button>
+        <div class="col-lg-12 col-sm-12">
+            <div class="panel panel-info">
+                <div class="panel-heading">
+                    <span class="glyphicon glyphicon-th-list"> 数据</span>
                 </div>
-            </form>
-            <div class="kv-file-content">
-                <form enctype="multipart/form-data" action="{% url 'upload' table=Departs %}" method="POST">
-                    {% csrf_token %}
-                    <br>
-                    <div>
-                        <input class="file" type="file" multiple data-count="1" data-allowed-extensions="['csv', 'xlsx', 'xls']" name="file_name">
-                    </div>
-                    <br><button type="submit" class="btn btn-primary" name="submit" value="submit">上传数据</button>
-                        <button type="submit" class="btn btn-primary" name="download" value="download">下载表格</button>
-                        <button type="reset" class="btn btn-default" name="reset" value="reset">重置</button>
-                </form>
+                <div class="panel-body">
+                    <table id="table"
+                           data-toggle="table" data-height="760"
+                           data-url="../../static/json/{{ json_url }}"
+                           data-method="get"
+                           data-pagination="true"
+                           data-page-size="20"
+                           data-page-list="[20,50,100]"
+                           data-id-field="id"
+                           data-show-refresh="true"
+                           data-show-toggle="true"
+                           data-show-columns="true"
+                           data-pagination-first-text="First"
+                           data-pagination-pre-text="Previous"
+                           data-pagination-next-text="Next"
+                           data-pagination-last-text="Last">
+                        <thead>
+                            <tr>
+                                {% for item in data_items %}
+                                    <th data-field="{{ item }}" data-sortable="True" data-switchable="True">
+                                        {{ item }}
+                                    </th>
+                                {% endfor %}
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
             </div>
         </div>
     </div>

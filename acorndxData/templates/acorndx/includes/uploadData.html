@@ -1,0 +1,77 @@
+{% extends 'acorndx/base.html' %}
+{% block head %}
+    <link href="../../../static/css/fileinput.css" media="all" rel="stylesheet" type="text/css"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" media="all" rel="stylesheet" type="text/css"/>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+    <script src="../../../static/js/zh.js" type="text/javascript"></script>
+    <script src="../../../static/js/fileinput.js" type="text/javascript"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" type="text/javascript"></script>
+{% endblock %}
+{% block content %}
+    <div class="row">
+        <div data-file-height="300">
+            <div class="col-sm-6 col-md-6">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <span class="glyphicon glyphicon-folder-open">选择文件</span>
+                    </div>
+                    <div class="panel-body no-padding" style="height: auto">
+                        <form enctype="multipart/form-data" action="{% url 'upload' %}" method="POST">
+                            {% csrf_token %}
+                            <select type="text" class="form-control" name="modify" title="table">
+                                <option>选择要上传的表格</option>
+                                {% for k, v in modify_tables.items%}
+                                    <option value={{ v }}>{{ k }}</option>
+                                {% endfor %}
+                            </select>
+                            <br>
+{#                            <div class="file-loading">#}
+{#                                <input id="file-4" type="file" class="file" name="file_name">#}
+{#                            </div>#}
+                            <div class="file-loading">
+                                <input class="file" type="file" multiple data-allowed-extensions="['csv', 'xlsx', 'xls']" name="file_name">
+                            </div>
+                            <br><button type="submit" class="btn btn-primary" name="submit" value="submit">上传数据</button>
+                                <button type="reset" class="btn btn-default" name="reset" value="reset">重置</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-md-6">
+                <div class="panel panel-info">
+                    <div class="panel-heading">
+                        <span class="glyphicon glyphicon-th-list">上传状态</span>
+                    </div>
+                    <div class="panel-body no-padding" style="height: auto">
+                        {% if not file_error %}
+                            {% if state == 1 %}
+                                <h4>数据上传成功，共计{{ total_num }}条</h4>
+                                <h4>新增的记录{{ create_num }}条</h4>
+{#            <h3>变更的记录{{ update_num }}条</h3>#}
+                                <h4>重复的记录{{ repeat }}条</h4>
+                                <h4>有{{ error_num }}条数据出错</h4>
+                            {% elif state == 0 %}
+                                <h4>数据上传错误，共计{{ total_num }}</h4>
+                                <h4>新增记录{{ create_num }}条</h4>
+                                <h4>更新记录{{ update_num }}条</h4>
+                                <h4>重复的记录{{ repeat }}条</h4>
+                                <h4>有{{ error_num }}条数据出错</h4>
+                                {% for error in error_log %}
+                                    <h4>{{ error }}</h4>
+                                {% endfor %}
+                            {% elif state == -1%}
+                                <h4>等待上传文件</h4>
+                            {% endif %}
+                        {% else %}
+                            <h4>上传的文件为空或者错误！请选择正确的文件！</h4>
+                            <li>1. 可能文件为空</li>
+                            <li>2. 可能选择上传的文件和选择的表格类型不正确</li>
+                            <li>3. 可能选择上传的文件和要更新的数据表匹配不上的表头超过三项</li>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--导入数据操作层-->
+{% endblock %}

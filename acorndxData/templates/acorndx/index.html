@@ -1,4 +1,9 @@
 {% extends 'acorndx/base.html' %}
 {% block content %}
-    <h2>请先注册或者登录</h2>
+    {% if not user %}
+        <h3>请先注册或者登录</h3>
+    {% else%}
+        <h3>您好，{{ user }}</h3>
+        <h3>欢迎使用金橡数据管理平台</h3>
+    {% endif %}
 {% endblock %}
