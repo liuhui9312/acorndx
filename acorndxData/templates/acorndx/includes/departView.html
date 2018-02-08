@@ -1,20 +1,12 @@
 {% extends 'acorndx/base.html' %}
+{% load static %}
 {% block head %}
-    <link rel="stylesheet" href="../../../static/css/bootstrap-table.css">
-    <link rel="stylesheet" href="../../../static/css/examples.css">
-
-    <script src="../../../static/js/bootstrap-table.js"></script>
-    <script src="../../../static/js/bootstrap-table-zh-CN.js"></script>
-    <script src="../../../static/js/bootstrap-table-export.js"></script>
-    <script src="../../../static/js/examples.js"></script>
-    <script src="../../../static/js/ga.js"></script>
-    <script type="text/javascript">
-        $(document).ready(function(){
-            $('#table').bootstrapTable({
-               data:{{data|safe}}
-            });
-        });
-    </script>
+    <link rel="stylesheet" href="{% static 'css/bootstrap-table.css' %}">
+    <link rel="stylesheet" href="{% static 'css/examples.css' %}">
+    <script src="{% static 'js/bootstrap-table.js' %}"></script>
+    <script src="{% static 'js/bootstrap-table-zh-CN.js' %}"></script>
+    <script src="{% static 'js/bootstrap-table-export.js' %}"></script>
+    <script src="{% static 'js/ga.js' %}"></script>
 {% endblock %}
 {% block content %}
     <div class="row">
@@ -26,7 +18,7 @@
                 <div class="panel-body">
                     <table id="table"
                            data-toggle="table" data-height="760"
-                           data-url="../../static/json/{{ json_url }}"
+                           data-url="{% static 'temp' %}/{{ json_url }}"
                            data-method="get"
                            data-pagination="true"
                            data-page-size="20"
@@ -53,5 +45,12 @@
             </div>
         </div>
     </div>
+{#    <script type="text/javascript">#}
+{#        $(document).ready(function(){#}
+{#            $('#table').bootstrapTable({#}
+{#               data:{{data|safe}}#}
+{#            });#}
+{#        });#}
+{#    </script>#}
     <!--导入数据操作层-->
 {% endblock %}

@@ -17,16 +17,15 @@ from django.conf.urls import url
 # from django.urls import path
 from django.contrib import admin
 from acorndxData import views
+from acorndx import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     url(r'^$', views.index_view, name='index'),
     url(r'^admin/', admin.site.urls),
     url(r'^login', views.login_view, name='login'),
-    # url(r'^output/$', views.output, name='download'),
     url(r'^register', views.register_view, name='register'),
     url(r'^depart/(?P<depart>\w+)', views.depart_view, name='depart'),
     url(r'^statistic/(?P<depart>\w+)', views.statistic_view, name='statistic'),
-    # url(r'^statistic/(?P<depart>\w+)', views.statistic_view, name='statistic'),
     url(r'^upload', views.load_data, name='upload'),
-    # url(r'^getData/(?P<depart>\w+)', views.get_data, name='getData'),
-]
+]+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

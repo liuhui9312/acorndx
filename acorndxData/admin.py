@@ -1,9 +1,9 @@
 from imp import reload
-# from .models import *
+from .models import *
 from django.apps import apps
 from acorndx import settings
 from django.contrib import admin
-from django.urls import clear_url_caches
+from django.core.urlresolvers import clear_url_caches
 from django.utils.module_loading import import_module
 from acorndxData.dataStructureInitial import abstract_model
 # Register your models here.

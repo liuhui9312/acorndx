@@ -25,8 +25,9 @@ SECRET_KEY = '46$e!=k=82ojw!b-nz6974_x&pkh4amnn548p)k7hnx7pi045m'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ['127.0.0.1',
+                 'localhost',
+                 ]
 
 # Application definition
 
@@ -41,7 +42,7 @@ INSTALLED_APPS = [
     'acorndxData',
 ]
 
-MIDDLEWARE = [
+MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -82,7 +83,7 @@ DATABASES = {
         'NAME': 'acorndxNew',
         'USER': 'root',
         'PASSWORD': 'mysql123',
-        'HOST': '127.0.0.1',
+        'HOST': 'localhost',
         'PORT': '3306',
     }
 }
@@ -123,9 +124,20 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.10/howto/static-files/
-
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+)
 STATIC_URL = '/static/'
-
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+# print('root, base, dirs')
+# print(STATIC_ROOT, BASE_DIR)
+STATICFILES_DIRS = (
+    '/acorndxData/static/',
+)
+DATA_URL = '/temp/'
+DATA_ROOT = os.path.join(STATIC_ROOT, 'temp')
+# print(DATA_ROOT)
 DJANGO_ECHARTS = {
     'lib_js_host': 'cdnjs'
 }

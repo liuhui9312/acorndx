@@ -27,9 +27,6 @@ def load_data():
 
 
 def create_model(name, fields=None, app_label='', module='', options=None, admin_opts=None):
-    """
-    Create specified model
-    """
     class Meta:
         # Using type('Meta', ...) gives a dict proxy error during model creation
         pass

@@ -1,5 +1,4 @@
 # coding=utf-8
-from acorndxData.configure import *
 from django.db import models
 # Create your models here.
 
@@ -47,29 +46,3 @@ class UserInfo(models.Model):
 
     def __str__(self):
         return self.userName
-
-
-'''
-class FinancialRecord(models.Model):
-    pass
-
-
-class PersonInfo(models.Model):
-    pass
-
-
-class CancerClinicInfo(models.Model):
-    pass
-
-
-class CancerResult(models.Model):
-    pass
-
-
-class BloodClinicInfo(models.Model):
-    pass
-
-
-class BloodResult(models.Model):
-    pass
-'''

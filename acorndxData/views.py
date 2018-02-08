@@ -136,17 +136,18 @@ def depart_view(request, depart):
                 # print(data_sets)
                 context['data_items'] = sorted(data_items)
                 file_name = ''.join(random.sample(string.ascii_letters + string.digits, 8))
-                json_file = './acorndxData/static/json/{0}.json'.format(file_name)
+                json_file = './acorndxData/static/temp/{0}.json'.format(file_name)
                 # print(json_file)
                 # 定时清空临时文件
-                if len(os.listdir('./acorndxData/static/json')) > 10:
-                    for jsf in glob.glob('./acorndxData/static/json/*.json'):
+                if len(os.listdir('./acorndxData/static/temp')) > 10:
+                    for jsf in glob.glob('./acorndxData/static/temp/*.json'):
                         os.remove(jsf)
                 if not os.path.exists(json_file):
                     fi = codecs.open(json_file, 'w', 'utf-8')
                     json.dump(data_sets, fi, ensure_ascii=False)
                     fi.close()
                 context['json_url'] = json_file.split('/')[-1]
+                # context['json_url'] = 's94KmNwu.json'
                 # if len(context['dataSets']):
             except Exception as e:
                 print(e)
@@ -224,7 +225,7 @@ def statistic_view(request, depart):
                                    group=group,
                                    data=data_sets)
                 plot_data = pd.DataFrame(plot_data)
-                print(plot_data)
+                # print(plot_data)
                 plot = Plot()
                 context['Echarts'] = plot.chart_plot(dat=plot_data,
                                                      sort=is_sorted,
@@ -232,6 +233,5 @@ def statistic_view(request, depart):
                                                      group=group,
                                                      pic_type=pic_type)
                 context['script_list'] = plot.script_list
-                # print(context['Echarts'])
         return render(request, 'acorndx/includes/statistic.html', context)
 

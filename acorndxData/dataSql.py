@@ -8,9 +8,6 @@
 import os
 import pandas as pd
 from django.apps import apps
-# from django.contrib import auth
-# from django.contrib.auth.models import User
-# from django.contrib.auth import authenticate
 from acorndxData.models import *
 from acorndxData.configure import table_trans
 
@@ -293,8 +290,3 @@ def get_xy(xlab, ylab, timeLine, group, data):
     #     print(k)
     #     print(v)
     return values
-
-
-def get_echarts(pic_type, is_sorted, data):
-    if pic_type == 'Bar':
-        pass
